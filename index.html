@@ -309,573 +309,573 @@
 
     </main>
 
-    <!-- JAVASCRIPT APP STATE MACHINE & UI LOGIC -->
-    <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwvEgyc6itMpuu3xE_hwV4_-3gNo5BAaCRgymGsuGsNbJaMdRt77el8kLD1jFykJhGQ/exec";
+<!-- JAVASCRIPT APP STATE MACHINE & UI LOGIC -->
+<script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwvEgyc6itMpuu3xE_hwV4_-3gNo5BAaCRgymGsuGsNbJaMdRt77el8kLD1jFykJhGQ/exec";
 
-        const PHASES = [
-            { 
-                id: 0, 
-                name: "Dynamic Warm-Up & Movement Prep", 
-                duration: 720, 
-                badge: "Phase 1", 
-                desc: "Focus on opening hips, activating thoracic spine, and priming ankles for sharp deceleration. Light jogs, high knees, butt kicks, karaoke, lateral shuffles (40ft), World's Greatest Stretch, spiderman crawls, leg swings, and inchworms.",
-                drills: [
-                    { title: "0:00 - 0:05 | Movement Prep", desc: "Light jogs, high knees, butt kicks, karaoke, and lateral shuffles (40 feet)." },
-                    { title: "0:05 - 0:09 | Mobility & Flexibility", desc: "World's Greatest Stretch, spiderman crawls, leg swings (front-to-back & side-to-side), and inchworms." },
-                    { title: "0:09 - 0:12 | CNS Primers", desc: "3 sets of 5 pogo hops, 2 build-up sprints to 80%, and 2 sharp deceleration stops." }
-                ]
-            },
-            { 
-                id: 1, 
-                name: "Rules Brief & Partner Pairings", 
-                duration: 360, 
-                badge: "Phase 2", 
-                desc: "Bring team together at home plate. Establish the 45-minute master clock standard, lock in partner matchups for head-to-head competition, and review strict penalties for mental errors.",
-                drills: [
-                    { title: "Establish the Standard", desc: "Team huddle at home plate. 45-minute master clock to finish all three rounds." },
-                    { title: "Partner Pairings", desc: "Lock in partner matchups. Partners stay together for the entire workout and compete head-to-head." },
-                    { title: "Review Penalties", desc: "Ensure every player knows exact consequences for mental errors before clock starts." }
-                ]
-            },
-            { 
-                id: 2, 
-                name: "The Baseball Gauntlet Circuit", 
-                duration: 2700, 
-                badge: "Phase 3 (Circuit)", 
-                desc: "45-minute master clock across 6 stations. Round 1: 2:00/st + 15s sprint + 3:00 water break; Round 2: 1:30/st + 15s sprint + 3:00 water break; Round 3: 1:00/st + 15s sprint + Zero-defect perfection rule." 
-            },
-            { 
-                id: 3, 
-                name: "Championship Finisher: Team Line Drill", 
-                duration: 300, 
-                badge: "Phase 4", 
-                desc: "Line entire team on foul line. Run 2 sets of 17s (foul line to foul line / 60-yard shuttle) under strict target time (under 32s). Everyone finishes together or entire team runs extra reps.",
-                drills: [
-                    { title: "Line Drill Setup", desc: "Line the entire team up on the foul line." },
-                    { title: "2 Sets of 17s", desc: "Foul line to foul line across outfield grass (or 60-yard shuttle runs) under 32 seconds." },
-                    { title: "Shared Fate", desc: "Everyone must finish together—if one player misses the time, the whole team runs an extra rep." }
-                ]
-            },
-            { 
-                id: 4, 
-                name: "Cool-Down, Breathing & Accountability Debrief", 
-                duration: 420, 
-                badge: "Phase 5", 
-                desc: "Down-regulation walk around infield followed by static hip flexor, hamstring, and forearm stretches. Team huddle calling out vocal leaders and clean footwork under fatigue.",
-                drills: [
-                    { title: "0:00 - 0:04 | Down-Regulation", desc: "Walk around the infield followed by static hip flexor, hamstring, and forearm stretches." },
-                    { title: "0:04 - 0:07 | Team Debrief & Huddle", desc: "Call out players who showed best vocal leadership, cleanest footwork under fatigue, and fastest transitions." }
-                ]
-            }
-        ];
-
-        let currentPhaseIndex = 0;
-        let masterSecondsRemaining = PHASES[0].duration;
-        let stationSecondsRemaining = PHASES[0].duration;
-        let isMasterRunning = false;
-        let masterInterval = null;
-        let soundEnabled = true;
-
-        let gauntletRound = 1;
-        const roundDurations = { 1: 120, 2: 90, 3: 60 };
-        let activeStationNumber = 1;
-
-        let stationState = {
-            1: { partnerA: "Player 1", partnerB: "Player 2", reps: 0, targetRnd1: "6-8 reps", targetRnd2: "4-6 reps", targetRnd3: "3-4 reps" },
-            2: { throws: 0, target: 16, targetRnd1: "16-20 throws", targetRnd2: "12-16 throws", targetRnd3: "8-10 throws" },
-            3: { success: 0, fails: 0, targetRnd1: "5-6 sprints", targetRnd2: "4-5 sprints", targetRnd3: "2-3 sprints" },
-            4: { catchStreak: 0, maxStreak: 12, targetRnd1: "40-50 catches", targetRnd2: "30-40 catches", targetRnd3: "20-25 catches" },
-            5: { reps: 0, targetRnd1: "6-8 reps", targetRnd2: "4-6 reps", targetRnd3: "3-4 reps" },
-            6: { trips: 0, weight: "45 lbs", targetRnd1: "3-4 trips", targetRnd2: "2-3 trips", targetRnd3: "1.5-2 trips" }
-        };
-
-        let squads = [
-            { id: "Squad 1", name: "Squad 1 (Infield)", points: 18, penalties: 0 },
-            { id: "Squad 2", name: "Squad 2 (Outfield)", points: 15, penalties: 1 },
-            { id: "Squad 3", name: "Squad 3 (Pitchers)", points: 13, penalties: 2 },
-            { id: "Squad 4", name: "Squad 4 (Catchers)", points: 17, penalties: 0 },
-            { id: "Squad 5", name: "Squad 5 (Corner IF)", points: 14, penalties: 1 },
-            { id: "Squad 6", name: "Squad 6 (Freshmen)", points: 12, penalties: 2 }
-        ];
-
-        function initApp() {
-            renderPhase();
-            renderSquadStandings();
-            renderStationWorkbench();
-            loadGoogleSheetRoster();
+    const PHASES = [
+        { 
+            id: 0, 
+            name: "Dynamic Warm-Up & Movement Prep", 
+            duration: 720, 
+            badge: "Phase 1", 
+            desc: "Focus on opening hips, activating thoracic spine, and priming ankles for sharp deceleration. Light jogs, high knees, butt kicks, karaoke, lateral shuffles (40ft), World's Greatest Stretch, spiderman crawls, leg swings, and inchworms.",
+            drills: [
+                { title: "0:00 - 0:05 | Movement Prep", desc: "Light jogs, high knees, butt kicks, karaoke, and lateral shuffles (40 feet)." },
+                { title: "0:05 - 0:09 | Mobility & Flexibility", desc: "World's Greatest Stretch, spiderman crawls, leg swings (front-to-back & side-to-side), and inchworms." },
+                { title: "0:09 - 0:12 | CNS Primers", desc: "3 sets of 5 pogo hops, 2 build-up sprints to 80%, and 2 sharp deceleration stops." }
+            ]
+        },
+        { 
+            id: 1, 
+            name: "Rules Brief & Partner Pairings", 
+            duration: 360, 
+            badge: "Phase 2", 
+            desc: "Bring team together at home plate. Establish the 45-minute master clock standard, lock in partner matchups for head-to-head competition, and review strict penalties for mental errors.",
+            drills: [
+                { title: "Establish the Standard", desc: "Team huddle at home plate. 45-minute master clock to finish all three rounds." },
+                { title: "Partner Pairings", desc: "Lock in partner matchups. Partners stay together for the entire workout and compete head-to-head." },
+                { title: "Review Penalties", desc: "Ensure every player knows exact consequences for mental errors before clock starts." }
+            ]
+        },
+        { 
+            id: 2, 
+            name: "The Baseball Gauntlet Circuit", 
+            duration: 2700, 
+            badge: "Phase 3 (Circuit)", 
+            desc: "45-minute master clock across 6 stations. Round 1: 2:00/st + 15s sprint + 3:00 water break; Round 2: 1:30/st + 15s sprint + 3:00 water break; Round 3: 1:00/st + 15s sprint + Zero-defect perfection rule." 
+        },
+        { 
+            id: 3, 
+            name: "Championship Finisher: Team Line Drill", 
+            duration: 300, 
+            badge: "Phase 4", 
+            desc: "Line entire team on foul line. Run 2 sets of 17s (foul line to foul line / 60-yard shuttle) under strict target time (under 32s). Everyone finishes together or entire team runs extra reps.",
+            drills: [
+                { title: "Line Drill Setup", desc: "Line the entire team up on the foul line." },
+                { title: "2 Sets of 17s", desc: "Foul line to foul line across outfield grass (or 60-yard shuttle runs) under 32 seconds." },
+                { title: "Shared Fate", desc: "Everyone must finish together—if one player misses the time, the whole team runs an extra rep." }
+            ]
+        },
+        { 
+            id: 4, 
+            name: "Cool-Down, Breathing & Accountability Debrief", 
+            duration: 420, 
+            badge: "Phase 5", 
+            desc: "Down-regulation walk around infield followed by static hip flexor, hamstring, and forearm stretches. Team huddle calling out vocal leaders and clean footwork under fatigue.",
+            drills: [
+                { title: "0:00 - 0:04 | Down-Regulation", desc: "Walk around the infield followed by static hip flexor, hamstring, and forearm stretches." },
+                { title: "0:04 - 0:07 | Team Debrief & Huddle", desc: "Call out players who showed best vocal leadership, cleanest footwork under fatigue, and fastest transitions." }
+            ]
         }
+    ];
 
-        function renderPhase() {
-            const phase = PHASES[currentPhaseIndex];
-            document.getElementById("master-phase-label").innerText = phase.badge + " | " + phase.name;
-            document.getElementById("stage-badge").innerText = phase.badge;
-            document.getElementById("stage-title").innerText = phase.name;
-            document.getElementById("stage-description").innerText = phase.desc;
+    let currentPhaseIndex = 0;
+    let masterSecondsRemaining = PHASES[0].duration;
+    let stationSecondsRemaining = PHASES[0].duration;
+    let isMasterRunning = false;
+    let masterInterval = null;
+    let soundEnabled = true;
 
-            const pills = document.querySelectorAll(".phase-pill");
-            pills.forEach((pill, idx) => {
-                if (idx === currentPhaseIndex) {
-                    pill.className = "phase-pill cursor-pointer p-2.5 rounded-xl bg-orange-600 text-white font-bold text-xs transition border border-orange-500 shadow-md scale-105";
-                } else if (idx < currentPhaseIndex) {
-                    pill.className = "phase-pill cursor-pointer p-2.5 rounded-xl bg-slate-900 text-slate-500 hover:bg-slate-800 font-bold text-xs transition border border-slate-800 opacity-60";
-                } else {
-                    pill.className = "phase-pill cursor-pointer p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-bold text-xs transition border border-slate-700";
-                }
-            });
+    let gauntletRound = 1;
+    const roundDurations = { 1: 120, 2: 90, 3: 60 };
+    let activeStationNumber = 1;
 
-            const circuitPanel = document.getElementById("gauntlet-circuit-panel");
-            const actionWorkbench = document.getElementById("phase-action-workbench");
-            const timerLabel = document.getElementById("timer-label-title");
+    let stationState = {
+        1: { partnerA: "Player 1", partnerB: "Player 2", reps: 0, targetRnd1: "6-8 reps", targetRnd2: "4-6 reps", targetRnd3: "3-4 reps" },
+        2: { throws: 0, target: 16, targetRnd1: "16-20 throws", targetRnd2: "12-16 throws", targetRnd3: "8-10 throws" },
+        3: { success: 0, fails: 0, targetRnd1: "5-6 sprints", targetRnd2: "4-5 sprints", targetRnd3: "2-3 sprints" },
+        4: { catchStreak: 0, maxStreak: 12, targetRnd1: "40-50 catches", targetRnd2: "30-40 catches", targetRnd3: "20-25 catches" },
+        5: { reps: 0, targetRnd1: "6-8 reps", targetRnd2: "4-6 reps", targetRnd3: "3-4 reps" },
+        6: { trips: 0, weight: "45 lbs", targetRnd1: "3-4 trips", targetRnd2: "2-3 trips", targetRnd3: "1.5-2 trips" }
+    };
 
-            if (currentPhaseIndex === 2) {
-                circuitPanel.classList.remove("hidden");
-                actionWorkbench.classList.add("hidden");
-                timerLabel.innerText = "Station / Round Timer";
-                stationSecondsRemaining = roundDurations[gauntletRound];
+    let squads = [
+        { id: "Squad 1", name: "Squad 1 (Infield)", points: 18, penalties: 0 },
+        { id: "Squad 2", name: "Squad 2 (Outfield)", points: 15, penalties: 1 },
+        { id: "Squad 3", name: "Squad 3 (Pitchers)", points: 13, penalties: 2 },
+        { id: "Squad 4", name: "Squad 4 (Catchers)", points: 17, penalties: 0 },
+        { id: "Squad 5", name: "Squad 5 (Corner IF)", points: 14, penalties: 1 },
+        { id: "Squad 6", name: "Squad 6 (Freshmen)", points: 12, penalties: 2 }
+    ];
+
+    function initApp() {
+        renderPhase();
+        renderSquadStandings();
+        renderStationWorkbench();
+        loadGoogleSheetRoster();
+    }
+
+    function renderPhase() {
+        const phase = PHASES[currentPhaseIndex];
+        document.getElementById("master-phase-label").innerText = phase.badge + " | " + phase.name;
+        document.getElementById("stage-badge").innerText = phase.badge;
+        document.getElementById("stage-title").innerText = phase.name;
+        document.getElementById("stage-description").innerText = phase.desc;
+
+        const pills = document.querySelectorAll(".phase-pill");
+        pills.forEach((pill, idx) => {
+            if (idx === currentPhaseIndex) {
+                pill.className = "phase-pill cursor-pointer p-2.5 rounded-xl bg-orange-600 text-white font-bold text-xs transition border border-orange-500 shadow-md scale-105";
+            } else if (idx < currentPhaseIndex) {
+                pill.className = "phase-pill cursor-pointer p-2.5 rounded-xl bg-slate-900 text-slate-500 hover:bg-slate-800 font-bold text-xs transition border border-slate-800 opacity-60";
             } else {
-                circuitPanel.classList.add("hidden");
-                actionWorkbench.classList.remove("hidden");
-                timerLabel.innerText = "Phase Timer";
-                stationSecondsRemaining = phase.duration;
-                renderPhaseActionWorkbench(phase);
+                pill.className = "phase-pill cursor-pointer p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-bold text-xs transition border border-slate-700";
             }
+        });
 
-            updateTimersDisplay();
+        const circuitPanel = document.getElementById("gauntlet-circuit-panel");
+        const actionWorkbench = document.getElementById("phase-action-workbench");
+        const timerLabel = document.getElementById("timer-label-title");
+
+        if (currentPhaseIndex === 2) {
+            circuitPanel.classList.remove("hidden");
+            actionWorkbench.classList.add("hidden");
+            timerLabel.innerText = "Station / Round Timer";
+            stationSecondsRemaining = roundDurations[gauntletRound];
+        } else {
+            circuitPanel.classList.add("hidden");
+            actionWorkbench.classList.remove("hidden");
+            timerLabel.innerText = "Phase Timer";
+            stationSecondsRemaining = phase.duration;
+            renderPhaseActionWorkbench(phase);
         }
 
-        function renderPhaseActionWorkbench(phase) {
-            const container = document.getElementById("phase-action-workbench");
-            if (!phase.drills) {
-                container.innerHTML = `<div class="text-xs text-slate-400">Phase in progress...</div>`;
-                return;
-            }
+        updateTimersDisplay();
+    }
 
-            let html = `<div class="text-xs font-black text-orange-400 uppercase tracking-wider mb-2">📋 Detailed Itinerary & Drill Breakdown</div><div class="space-y-2">`;
-            phase.drills.forEach(d => {
-                html += `
-                    <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl">
-                        <div class="text-xs font-bold text-white">${d.title}</div>
-                        <div class="text-[11px] text-slate-300 mt-0.5">${d.desc}</div>
-                    </div>
-                `;
-            });
-            html += `</div>`;
-            container.innerHTML = html;
+    function renderPhaseActionWorkbench(phase) {
+        const container = document.getElementById("phase-action-workbench");
+        if (!phase.drills) {
+            container.innerHTML = `<div class="text-xs text-slate-400">Phase in progress...</div>`;
+            return;
         }
 
-        function updateTimersDisplay() {
-            let mMin = Math.floor(masterSecondsRemaining / 60);
-            let mSec = masterSecondsRemaining % 60;
-            document.getElementById("master-timer").innerText = `${mMin.toString().padStart(2, '0')}:${mSec.toString().padStart(2, '0')}`;
+        let html = `<div class="text-xs font-black text-orange-400 uppercase tracking-wider mb-2">📋 Detailed Itinerary & Drill Breakdown</div><div class="space-y-2">`;
+        phase.drills.forEach(d => {
+            html += `
+                <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl">
+                    <div class="text-xs font-bold text-white">${d.title}</div>
+                    <div class="text-[11px] text-slate-300 mt-0.5">${d.desc}</div>
+                </div>
+            `;
+        });
+        html += `</div>`;
+        container.innerHTML = html;
+    }
 
-            let sMin = Math.floor(stationSecondsRemaining / 60);
-            let sSec = stationSecondsRemaining % 60;
-            document.getElementById("station-timer").innerText = `${sMin.toString().padStart(2, '0')}:${sSec.toString().padStart(2, '0')}`;
-        }
+    function updateTimersDisplay() {
+        let mMin = Math.floor(masterSecondsRemaining / 60);
+        let mSec = masterSecondsRemaining % 60;
+        document.getElementById("master-timer").innerText = `${mMin.toString().padStart(2, '0')}:${mSec.toString().padStart(2, '0')}`;
 
-        function toggleMasterTimer() {
-            if (isMasterRunning) {
-                clearInterval(masterInterval);
-                isMasterRunning = false;
-                document.getElementById("master-play-btn").innerHTML = "▶ Start Practice";
-                document.getElementById("master-play-btn").className = "bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all shadow-lg shadow-emerald-600/20 flex items-center gap-1.5";
-            } else {
-                isMasterRunning = true;
-                document.getElementById("master-play-btn").innerHTML = "⏸ Pause";
-                document.getElementById("master-play-btn").className = "bg-amber-600 hover:bg-amber-500 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all shadow-lg shadow-amber-600/20 flex items-center gap-1.5";
-                
-                masterInterval = setInterval(() => {
-                    if (masterSecondsRemaining > 0) masterSecondsRemaining--;
-                    if (stationSecondsRemaining > 0) stationSecondsRemaining--;
-                    
-                    updateTimersDisplay();
+        let sMin = Math.floor(stationSecondsRemaining / 60);
+        let sSec = stationSecondsRemaining % 60;
+        document.getElementById("station-timer").innerText = `${sMin.toString().padStart(2, '0')}:${sSec.toString().padStart(2, '0')}`;
+    }
 
-                    if (masterSecondsRemaining === 0) {
-                        clearInterval(masterInterval);
-                        isMasterRunning = false;
-                        playBeep();
-                        alert("The 75-Minute Practice session has officially concluded!");
-                    }
-                }, 1000);
-            }
-        }
-
-        function resetMasterTimer() {
+    function toggleMasterTimer() {
+        if (isMasterRunning) {
             clearInterval(masterInterval);
             isMasterRunning = false;
-            currentPhaseIndex = 0;
-            masterSecondsRemaining = PHASES[0].duration;
             document.getElementById("master-play-btn").innerHTML = "▶ Start Practice";
             document.getElementById("master-play-btn").className = "bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all shadow-lg shadow-emerald-600/20 flex items-center gap-1.5";
-            renderPhase();
-        }
-
-        function skipPhase() {
-            if (currentPhaseIndex < PHASES.length - 1) {
-                currentPhaseIndex++;
-                masterSecondsRemaining = PHASES[currentPhaseIndex].duration;
-                renderPhase();
-            }
-        }
-
-        function jumpToPhase(index) {
-            currentPhaseIndex = index;
-            masterSecondsRemaining = PHASES[index].duration;
-            renderPhase();
-        }
-
-        function advanceGauntletRound() {
-            if (gauntletRound < 3) {
-                gauntletRound++;
-                stationSecondsRemaining = roundDurations[gauntletRound];
-                const badge = document.getElementById("circuit-round-badge");
-                const desc = document.getElementById("circuit-mode-desc");
-                if (gauntletRound === 2) {
-                    badge.innerText = "Round 2: Tempo";
-                    badge.className = "bg-amber-600 text-white font-bold text-xs px-3 py-1 rounded-xl uppercase shadow";
-                    desc.innerText = "1:30 per station | Push pace & vocal energy";
-                } else if (gauntletRound === 3) {
-                    badge.innerText = "Round 3: Perfection";
-                    badge.className = "bg-purple-600 text-white font-bold text-xs px-3 py-1 rounded-xl uppercase shadow animate-pulse";
-                    desc.innerText = "1:00 per station | Zero-defect standard (Mistakes reset station)";
-                }
+        } else {
+            isMasterRunning = true;
+            document.getElementById("master-play-btn").innerHTML = "⏸ Pause";
+            document.getElementById("master-play-btn").className = "bg-amber-600 hover:bg-amber-500 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all shadow-lg shadow-amber-600/20 flex items-center gap-1.5";
+            
+            masterInterval = setInterval(() => {
+                if (masterSecondsRemaining > 0) masterSecondsRemaining--;
+                if (stationSecondsRemaining > 0) stationSecondsRemaining--;
+                
                 updateTimersDisplay();
-            } else {
-                alert("All 3 Gauntlet Rounds completed! Proceeding to Championship Finisher.");
-                jumpToPhase(3);
-            }
-        }
 
-        function triggerSprintTransition() {
-            stationSecondsRemaining = 15;
-            updateTimersDisplay();
-            playBeep();
-            alert("🚨 15-Second Sprint Transition! Sprint clockwise to the next station immediately.");
-        }
-
-        function triggerStationReset() {
-            stationSecondsRemaining = roundDurations[gauntletRound];
-            playBeep();
-            alert("⚠️ Station Perfection Reset! The offending group must restart their 60-second clock from zero.");
-            updateTimersDisplay();
-        }
-
-        function applyPenalty(penaltyName, seconds) {
-            masterSecondsRemaining = Math.max(0, masterSecondsRemaining - seconds);
-            updateTimersDisplay();
-            playBeep();
-            alert(`Penalty Triggered: ${penaltyName}. -${seconds}s deducted from master clock!`);
-        }
-
-        function selectStation(num) {
-            activeStationNumber = num;
-            for (let i = 1; i <= 6; i++) {
-                const btn = document.getElementById(`station-btn-${i}`);
-                if (i === num) {
-                    btn.className = "station-btn bg-slate-900 border-2 border-orange-500 p-3 rounded-xl cursor-pointer transition shadow";
-                } else {
-                    btn.className = "station-btn bg-slate-900 border border-slate-800 p-3 rounded-xl cursor-pointer transition hover:border-slate-700";
+                if (masterSecondsRemaining === 0) {
+                    clearInterval(masterInterval);
+                    isMasterRunning = false;
+                    playBeep();
+                    alert("The 75-Minute Practice session has officially concluded!");
                 }
+            }, 1000);
+        }
+    }
+
+    function resetMasterTimer() {
+        clearInterval(masterInterval);
+        isMasterRunning = false;
+        currentPhaseIndex = 0;
+        masterSecondsRemaining = PHASES[0].duration;
+        document.getElementById("master-play-btn").innerHTML = "▶ Start Practice";
+        document.getElementById("master-play-btn").className = "bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all shadow-lg shadow-emerald-600/20 flex items-center gap-1.5";
+        renderPhase();
+    }
+
+    function skipPhase() {
+        if (currentPhaseIndex < PHASES.length - 1) {
+            currentPhaseIndex++;
+            masterSecondsRemaining = PHASES[currentPhaseIndex].duration;
+            renderPhase();
+        }
+    }
+
+    function jumpToPhase(index) {
+        currentPhaseIndex = index;
+        masterSecondsRemaining = PHASES[index].duration;
+        renderPhase();
+    }
+
+    function advanceGauntletRound() {
+        if (gauntletRound < 3) {
+            gauntletRound++;
+            stationSecondsRemaining = roundDurations[gauntletRound];
+            const badge = document.getElementById("circuit-round-badge");
+            const desc = document.getElementById("circuit-mode-desc");
+            if (gauntletRound === 2) {
+                badge.innerText = "Round 2: Tempo";
+                badge.className = "bg-amber-600 text-white font-bold text-xs px-3 py-1 rounded-xl uppercase shadow";
+                desc.innerText = "1:30 per station | Push pace & vocal energy";
+            } else if (gauntletRound === 3) {
+                badge.innerText = "Round 3: Perfection";
+                badge.className = "bg-purple-600 text-white font-bold text-xs px-3 py-1 rounded-xl uppercase shadow animate-pulse";
+                desc.innerText = "1:00 per station | Zero-defect standard (Mistakes reset station)";
             }
-            renderStationWorkbench();
+            updateTimersDisplay();
+        } else {
+            alert("All 3 Gauntlet Rounds completed! Proceeding to Championship Finisher.");
+            jumpToPhase(3);
         }
+    }
 
-        function renderStationWorkbench() {
-            const container = document.getElementById("station-workbench-view");
-            const st = activeStationNumber;
-            const curState = stationState[st];
-            const targetRec = gauntletRound === 1 ? curState.targetRnd1 : (gauntletRound === 2 ? curState.targetRnd2 : curState.targetRnd3);
+    function triggerSprintTransition() {
+        stationSecondsRemaining = 15;
+        updateTimersDisplay();
+        playBeep();
+        alert("🚨 15-Second Sprint Transition! Sprint clockwise to the next station immediately.");
+    }
 
-            let html = `<div class="flex justify-between items-center mb-3">
-                <span class="text-xs font-black text-orange-400 uppercase tracking-wider">Station ${st} Interactive Workbench</span>
-                <span class="text-[10px] text-emerald-400 font-bold bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800">Target: ${targetRec}</span>
-            </div>`;
+    function triggerStationReset() {
+        stationSecondsRemaining = roundDurations[gauntletRound];
+        playBeep();
+        alert("⚠️ Station Perfection Reset! The offending group must restart their 60-second clock from zero.");
+        updateTimersDisplay();
+    }
 
-            if (st === 1) {
-                html += `
-                    <div class="space-y-3">
-                        <div class="text-xs font-bold text-white">Station 1: Reactive Mirror & 10-Yard First-Step Shuttles</div>
-                        <p class="text-[11px] text-slate-400">Partners face each other in low fielding crouch. Partner A shuffles 5 yds, touches line, and sprints 10 yds through finish cone; Partner B mirrors and races them.</p>
-                        <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl">
-                            <div>
-                                <div class="text-xs text-slate-300 font-semibold">Completed Shuttles & Sprints</div>
-                                <div class="text-2xl font-black text-orange-400">${stationState[1].reps} Reps</div>
-                            </div>
-                            <div class="space-x-2">
-                                <button onclick="modifyStationVal(1, 'reps', 1)" class="bg-orange-600 hover:bg-orange-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">+1 Rep</button>
-                                <button onclick="modifyStationVal(1, 'reps', -1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-lg text-xs">-1</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else if (st === 2) {
-                html += `
-                    <div class="space-y-3">
-                        <div class="text-xs font-bold text-white">Station 2: Rotational Med-Ball Shot-Put & Scoop (8–10 lbs)</div>
-                        <p class="text-[11px] text-slate-400">Explode from back hip into rotational throw against wall/fence, field rebound cleanly in athletic stance, and fire from opposite side.</p>
-                        <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl">
-                            <div>
-                                <div class="text-xs text-slate-300 font-semibold">Continuous Throws & Scoops</div>
-                                <div class="text-2xl font-black text-orange-400">${stationState[2].throws} Throws</div>
-                            </div>
-                            <div class="space-x-2">
-                                <button onclick="modifyStationVal(2, 'throws', 2)" class="bg-orange-600 hover:bg-orange-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">+2 Throws</button>
-                                <button onclick="modifyStationVal(2, 'throws', -1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-lg text-xs">-1</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else if (st === 3) {
-                html += `
-                    <div class="space-y-3">
-                        <div class="text-xs font-bold text-white">Station 3: 60-Foot Steal Starts & Deceleration Box</div>
-                        <p class="text-[11px] text-slate-400">Execute sharp crossover steal start on movement, sprint 60 ft, and come to complete under-control stop inside 10-ft cone box.</p>
-                        <div class="grid grid-cols-2 gap-3 bg-slate-950 p-3 rounded-xl">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <div class="text-xs text-emerald-400 font-semibold">Clean Stops</div>
-                                    <div class="text-xl font-black text-white">${stationState[3].success}</div>
-                                </div>
-                                <button onclick="modifyStationVal(3, 'success', 1)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">Success +1</button>
-                            </div>
-                            <div class="flex justify-between items-center border-l border-slate-800 pl-3">
-                                <div>
-                                    <div class="text-xs text-red-400 font-semibold">Overruns / Slips</div>
-                                    <div class="text-xl font-black text-white">${stationState[3].fails}</div>
-                                </div>
-                                <button onclick="modifyStationVal(3, 'fails', 1)" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">Fail +1</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else if (st === 4) {
-                html += `
-                    <div class="space-y-3">
-                        <div class="text-xs font-bold text-white">🔥 Station 4: Rapid-Fire Barehand Short-Hops (Zero-Defect Standard)</div>
-                        <p class="text-[11px] text-slate-400">Partners kneel/squat 10 ft apart with 1 baseball (no gloves). Rapidly roll/bounce short-hops, funneling to midline with soft hands. Any drop resets count to zero.</p>
-                        <div class="flex items-center justify-between bg-slate-950 p-4 rounded-xl border border-orange-500/30">
-                            <div>
-                                <div class="text-xs text-orange-400 font-bold uppercase tracking-wider">Consecutive Clean Catch Streak</div>
-                                <div class="text-3xl font-black text-white">${stationState[4].catchStreak} <span class="text-xs text-slate-400 font-normal">Streak</span></div>
-                            </div>
-                            <div class="space-x-2">
-                                <button onclick="modifyStationVal(4, 'catchStreak', 1)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3.5 py-2 rounded-xl text-sm shadow">Catch +1</button>
-                                <button onclick="resetCatchStreak()" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3.5 py-2 rounded-xl text-sm shadow">Drop! (Reset 0)</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else if (st === 5) {
-                html += `
-                    <div class="space-y-3">
-                        <div class="text-xs font-bold text-white">Station 5: Lateral Hurdle Hops & 15-Yard Burst</div>
-                        <p class="text-[11px] text-slate-400">Three 6-inch mini-hurdles. Rapid double-leg lateral hops over all three, stick final landing, open hips into 15-yard sprint.</p>
-                        <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl">
-                            <div>
-                                <div class="text-xs text-slate-300 font-semibold">Completed Bursts</div>
-                                <div class="text-2xl font-black text-orange-400">${stationState[5].reps} Reps</div>
-                            </div>
-                            <div class="space-x-2">
-                                <button onclick="modifyStationVal(5, 'reps', 1)" class="bg-orange-600 hover:bg-orange-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">+1 Rep</button>
-                                <button onclick="modifyStationVal(5, 'reps', -1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-lg text-xs">-1</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else if (st === 6) {
-                html += `
-                    <div class="space-y-3">
-                        <div class="text-xs font-bold text-white">Station 6: Heavy Farmer's Carry (40–50 lb DB/KB)</div>
-                        <p class="text-[11px] text-slate-400">Carry down and back along 20-yard lane with tall posture, packed shoulders, and zero torso swaying.</p>
-                        <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl">
-                            <div>
-                                <div class="text-xs text-slate-300 font-semibold">Completed 40-Yd Trips</div>
-                                <div class="text-2xl font-black text-orange-400">${stationState[6].trips} Trips</div>
-                            </div>
-                            <div class="space-x-2">
-                                <button onclick="modifyStationVal(6, 'trips', 1)" class="bg-orange-600 hover:bg-orange-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">+1 Trip</button>
-                                <button onclick="modifyStationVal(6, 'trips', -1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-lg text-xs">-1</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
+    function applyPenalty(penaltyName, seconds) {
+        masterSecondsRemaining = Math.max(0, masterSecondsRemaining - seconds);
+        updateTimersDisplay();
+        playBeep();
+        alert(`Penalty Triggered: ${penaltyName}. -${seconds}s deducted from master clock!`);
+    }
 
-            container.innerHTML = html;
-        }
-
-        function modifyStationVal(st, key, delta) {
-            stationState[st][key] = Math.max(0, stationState[st][key] + delta);
-            renderStationWorkbench();
-        }
-
-        function resetCatchStreak() {
-            stationState[4].catchStreak = 0;
-            playBeep();
-            renderStationWorkbench();
-        }
-
-        function toggleAudio() {
-            soundEnabled = !soundEnabled;
-            document.getElementById("audio-toggle-btn").innerText = soundEnabled ? "🔊 Sound On" : "🔇 Muted";
-            document.getElementById("audio-toggle-btn-desktop").innerText = soundEnabled ? "🔊 Sound" : "🔇 Muted";
-        }
-
-        function playBeep() {
-            if (!soundEnabled) return;
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.type = "sine";
-                osc.frequency.value = 880;
-                gain.gain.setValueAtTime(0.15, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start();
-                osc.stop(ctx.currentTime + 0.4);
-            } catch (e) {
-                console.log("Audio Context not supported or blocked.");
+    function selectStation(num) {
+        activeStationNumber = num;
+        for (let i = 1; i <= 6; i++) {
+            const btn = document.getElementById(`station-btn-${i}`);
+            if (i === num) {
+                btn.className = "station-btn bg-slate-900 border-2 border-orange-500 p-3 rounded-xl cursor-pointer transition shadow";
+            } else {
+                btn.className = "station-btn bg-slate-900 border border-slate-800 p-3 rounded-xl cursor-pointer transition hover:border-slate-700";
             }
         }
+        renderStationWorkbench();
+    }
 
-        function renderSquadStandings() {
-            const container = document.getElementById("squad-standings-container");
-            container.innerHTML = "";
-            squads.forEach((squad, idx) => {
-                container.innerHTML += `
-                    <div class="bg-slate-950 border border-slate-800/80 p-3 rounded-xl flex justify-between items-center">
-                        <div class="flex items-center space-x-3">
-                            <span class="font-black text-slate-500 text-sm">#${idx + 1}</span>
-                            <div>
-                                <div class="text-xs font-bold text-white">${squad.name}</div>
-                                <div class="text-[10px] text-slate-400">Penalties: <span class="text-red-400 font-bold">${squad.penalties}</span></div>
-                            </div>
+    function renderStationWorkbench() {
+        const container = document.getElementById("station-workbench-view");
+        const st = activeStationNumber;
+        const curState = stationState[st];
+        const targetRec = gauntletRound === 1 ? curState.targetRnd1 : (gauntletRound === 2 ? curState.targetRnd2 : curState.targetRnd3);
+
+        let html = `<div class="flex justify-between items-center mb-3">
+            <span class="text-xs font-black text-orange-400 uppercase tracking-wider">Station ${st} Interactive Workbench</span>
+            <span class="text-[10px] text-emerald-400 font-bold bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800">Target: ${targetRec}</span>
+        </div>`;
+
+        if (st === 1) {
+            html += `
+                <div class="space-y-3">
+                    <div class="text-xs font-bold text-white">Station 1: Reactive Mirror & 10-Yard First-Step Shuttles</div>
+                    <p class="text-[11px] text-slate-400">Partners face each other in low fielding crouch. Partner A shuffles 5 yds, touches line, and sprints 10 yds through finish cone; Partner B mirrors and races them.</p>
+                    <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl">
+                        <div>
+                            <div class="text-xs text-slate-300 font-semibold">Completed Shuttles & Sprints</div>
+                            <div class="text-2xl font-black text-orange-400">${stationState[1].reps} Reps</div>
                         </div>
-                        <div class="text-right">
-                            <span class="text-sm font-black text-orange-400">${squad.points} Pts</span>
+                        <div class="space-x-2">
+                            <button onclick="modifyStationVal(1, 'reps', 1)" class="bg-orange-600 hover:bg-orange-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">+1 Rep</button>
+                            <button onclick="modifyStationVal(1, 'reps', -1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-lg text-xs">-1</button>
                         </div>
                     </div>
-                `;
+                </div>
+            `;
+        } else if (st === 2) {
+            html += `
+                <div class="space-y-3">
+                    <div class="text-xs font-bold text-white">Station 2: Rotational Med-Ball Shot-Put & Scoop (8–10 lbs)</div>
+                    <p class="text-[11px] text-slate-400">Explode from back hip into rotational throw against wall/fence, field rebound cleanly in athletic stance, and fire from opposite side.</p>
+                    <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl">
+                        <div>
+                            <div class="text-xs text-slate-300 font-semibold">Continuous Throws & Scoops</div>
+                            <div class="text-2xl font-black text-orange-400">${stationState[2].throws} Throws</div>
+                        </div>
+                        <div class="space-x-2">
+                            <button onclick="modifyStationVal(2, 'throws', 2)" class="bg-orange-600 hover:bg-orange-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">+2 Throws</button>
+                            <button onclick="modifyStationVal(2, 'throws', -1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-lg text-xs">-1</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (st === 3) {
+            html += `
+                <div class="space-y-3">
+                    <div class="text-xs font-bold text-white">Station 3: 60-Foot Steal Starts & Deceleration Box</div>
+                    <p class="text-[11px] text-slate-400">Execute sharp crossover steal start on movement, sprint 60 ft, and come to complete under-control stop inside 10-ft cone box.</p>
+                    <div class="grid grid-cols-2 gap-3 bg-slate-950 p-3 rounded-xl">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="text-xs text-emerald-400 font-semibold">Clean Stops</div>
+                                <div class="text-xl font-black text-white">${stationState[3].success}</div>
+                            </div>
+                            <button onclick="modifyStationVal(3, 'success', 1)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">Success +1</button>
+                        </div>
+                        <div class="flex justify-between items-center border-l border-slate-800 pl-3">
+                            <div>
+                                <div class="text-xs text-red-400 font-semibold">Overruns / Slips</div>
+                                <div class="text-xl font-black text-white">${stationState[3].fails}</div>
+                            </div>
+                            <button onclick="modifyStationVal(3, 'fails', 1)" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">Fail +1</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (st === 4) {
+            html += `
+                <div class="space-y-3">
+                    <div class="text-xs font-bold text-white">🔥 Station 4: Rapid-Fire Barehand Short-Hops (Zero-Defect Standard)</div>
+                    <p class="text-[11px] text-slate-400">Partners kneel/squat 10 ft apart with 1 baseball (no gloves). Rapidly roll/bounce short-hops, funneling to midline with soft hands. Any drop resets count to zero.</p>
+                    <div class="flex items-center justify-between bg-slate-950 p-4 rounded-xl border border-orange-500/30">
+                        <div>
+                            <div class="text-xs text-orange-400 font-bold uppercase tracking-wider">Consecutive Clean Catch Streak</div>
+                            <div class="text-3xl font-black text-white">${stationState[4].catchStreak} <span class="text-xs text-slate-400 font-normal">Streak</span></div>
+                        </div>
+                        <div class="space-x-2">
+                            <button onclick="modifyStationVal(4, 'catchStreak', 1)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3.5 py-2 rounded-xl text-sm shadow">Catch +1</button>
+                            <button onclick="resetCatchStreak()" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3.5 py-2 rounded-xl text-sm shadow">Drop! (Reset 0)</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (st === 5) {
+            html += `
+                <div class="space-y-3">
+                    <div class="text-xs font-bold text-white">Station 5: Lateral Hurdle Hops & 15-Yard Burst</div>
+                    <p class="text-[11px] text-slate-400">Three 6-inch mini-hurdles. Rapid double-leg lateral hops over all three, stick final landing, open hips into 15-yard sprint.</p>
+                    <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl">
+                        <div>
+                            <div class="text-xs text-slate-300 font-semibold">Completed Bursts</div>
+                            <div class="text-2xl font-black text-orange-400">${stationState[5].reps} Reps</div>
+                        </div>
+                        <div class="space-x-2">
+                            <button onclick="modifyStationVal(5, 'reps', 1)" class="bg-orange-600 hover:bg-orange-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">+1 Rep</button>
+                            <button onclick="modifyStationVal(5, 'reps', -1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-lg text-xs">-1</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (st === 6) {
+            html += `
+                <div class="space-y-3">
+                    <div class="text-xs font-bold text-white">Station 6: Heavy Farmer's Carry (40–50 lb DB/KB)</div>
+                    <p class="text-[11px] text-slate-400">Carry down and back along 20-yard lane with tall posture, packed shoulders, and zero torso swaying.</p>
+                    <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl">
+                        <div>
+                            <div class="text-xs text-slate-300 font-semibold">Completed 40-Yd Trips</div>
+                            <div class="text-2xl font-black text-orange-400">${stationState[6].trips} Trips</div>
+                        </div>
+                        <div class="space-x-2">
+                            <button onclick="modifyStationVal(6, 'trips', 1)" class="bg-orange-600 hover:bg-orange-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">+1 Trip</button>
+                            <button onclick="modifyStationVal(6, 'trips', -1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-lg text-xs">-1</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        container.innerHTML = html;
+    }
+
+    function modifyStationVal(st, key, delta) {
+        stationState[st][key] = Math.max(0, stationState[st][key] + delta);
+        renderStationWorkbench();
+    }
+
+    function resetCatchStreak() {
+        stationState[4].catchStreak = 0;
+        playBeep();
+        renderStationWorkbench();
+    }
+
+    function toggleAudio() {
+        soundEnabled = !soundEnabled;
+        document.getElementById("audio-toggle-btn").innerText = soundEnabled ? "🔊 Sound On" : "🔇 Muted";
+        document.getElementById("audio-toggle-btn-desktop").innerText = soundEnabled ? "🔊 Sound" : "🔇 Muted";
+    }
+
+    function playBeep() {
+        if (!soundEnabled) return;
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.value = 880;
+            gain.gain.setValueAtTime(0.15, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.4);
+        } catch (e) {
+            console.log("Audio Context not supported or blocked.");
+        }
+    }
+
+    function renderSquadStandings() {
+        const container = document.getElementById("squad-standings-container");
+        container.innerHTML = "";
+        squads.forEach((squad, idx) => {
+            container.innerHTML += `
+                <div class="bg-slate-950 border border-slate-800/80 p-3 rounded-xl flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <span class="font-black text-slate-500 text-sm">#${idx + 1}</span>
+                        <div>
+                            <div class="text-xs font-bold text-white">${squad.name}</div>
+                            <div class="text-[10px] text-slate-400">Penalties: <span class="text-red-400 font-bold">${squad.penalties}</span></div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-sm font-black text-orange-400">${squad.points} Pts</span>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    async function submitGauntletMetric(event) {
+        event.preventDefault();
+        const feedback = document.getElementById("log-feedback");
+        feedback.style.color = "#38bdf8";
+        feedback.innerText = "Syncing with Google Sheet API...";
+
+        const payload = {
+            action: "logData",
+            squadId: document.getElementById("log-squad-select").value,
+            station: document.getElementById("log-station-select").value,
+            metricType: document.getElementById("log-metric-type").value,
+            value: document.getElementById("log-metric-value").value
+        };
+
+        try {
+            await fetch(WEB_APP_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
             });
+            feedback.style.color = "#4ade80";
+            feedback.innerText = "Successfully logged & synced to Google Sheet!";
+            document.getElementById("log-metric-value").value = "";
+            setTimeout(() => { feedback.innerText = ""; }, 3500);
+        } catch (err) {
+            console.warn("API network restricted in preview sandbox. Metric recorded locally.");
+            feedback.style.color = "#fbbf24";
+            feedback.innerText = "Logged locally (Sandbox CORS restriction bypassed).";
+            document.getElementById("log-metric-value").value = "";
+            setTimeout(() => { feedback.innerText = ""; }, 3500);
         }
+    }
 
-        async function submitGauntletMetric(event) {
-            event.preventDefault();
-            const feedback = document.getElementById("log-feedback");
-            feedback.style.color = "#38bdf8";
-            feedback.innerText = "Syncing with Google Sheet API...";
+    async function handlePlayerSubmit(event) {
+        event.preventDefault();
+        const name = document.getElementById("add-player-name").value;
+        const squad = document.getElementById("add-player-squad").value;
+        const pos = document.getElementById("add-player-pos").value || "UT";
 
-            const payload = {
-                action: "logData",
-                squadId: document.getElementById("log-squad-select").value,
-                station: document.getElementById("log-station-select").value,
-                metricType: document.getElementById("log-metric-type").value,
-                value: document.getElementById("log-metric-value").value
-            };
+        const payload = {
+            action: "addPlayer",
+            name: name,
+            gradClass: "2027",
+            squad: squad,
+            position: pos
+        };
 
-            try {
-                await fetch(WEB_APP_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-                feedback.style.color = "#4ade80";
-                feedback.innerText = "Successfully logged & synced to Google Sheet!";
-                document.getElementById("log-metric-value").value = "";
-                setTimeout(() => { feedback.innerText = ""; }, 3500);
-            } catch (err) {
-                console.warn("API network restricted in preview sandbox. Metric recorded locally.");
-                feedback.style.color = "#fbbf24";
-                feedback.innerText = "Logged locally (Sandbox CORS restriction bypassed).";
-                document.getElementById("log-metric-value").value = "";
-                setTimeout(() => { feedback.innerText = ""; }, 3500);
-            }
+        try {
+            await fetch(WEB_APP_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            alert(`Player ${name} sent to Google Sheet successfully!`);
+            document.getElementById("add-player-name").value = "";
+            document.getElementById("add-player-pos").value = "";
+            setTimeout(loadGoogleSheetRoster, 1500);
+        } catch (err) {
+            console.error(err);
+            alert("Error sending player to Google Sheet.");
         }
+    }
 
-        async function handlePlayerSubmit(event) {
-            event.preventDefault();
-            const name = document.getElementById("add-player-name").value;
-            const squad = document.getElementById("add-player-squad").value;
-            const pos = document.getElementById("add-player-pos").value || "UT";
+    async function loadGoogleSheetRoster() {
+        const tbody = document.getElementById("roster-table-body");
+        tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-500">Fetching live roster directly from Google Sheet...</td></tr>`;
 
-            const payload = {
-                action: "addPlayer",
-                name: name,
-                gradClass: "2027",
-                squad: squad,
-                position: pos
-            };
-
-            try {
-                await fetch(WEB_APP_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-                alert(`Player ${name} sent to Google Sheet successfully!`);
-                document.getElementById("add-player-name").value = "";
-                document.getElementById("add-player-pos").value = "";
-                setTimeout(loadGoogleSheetRoster, 1500);
-            } catch (err) {
-                console.error(err);
-                alert("Error sending player to Google Sheet.");
-            }
-        }
-
-        async function loadGoogleSheetRoster() {
-            const tbody = document.getElementById("roster-table-body");
-            tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-500">Fetching live roster directly from Google Sheet...</td></tr>`;
-
-            try {
-                // Attempt standard CORS fetch first
-                const response = await fetch(`${WEB_APP_URL}?action=getPlayers`, {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' }
-                });
-                const players = await response.json();
+        try {
+            // Attempt standard CORS fetch first
+            const response = await fetch(`${WEB_APP_URL}?action=getPlayers`, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            });
+            const players = await response.json();
+            renderRosterTable(players);
+        } catch (err) {
+            console.warn("CORS fetch blocked in sandbox, switching to JSONP callback...", err);
+            // Fallback to JSONP script injection to bypass sandbox CORS restrictions
+            window.__jsonpCallback = function(players) {
                 renderRosterTable(players);
-            } catch (err) {
-                console.warn("CORS fetch blocked in sandbox, switching to JSONP callback...", err);
-                // Fallback to JSONP script injection to bypass sandbox CORS restrictions
-                window.__jsonpCallback = function(players) {
-                    renderRosterTable(players);
-                    delete window.__jsonpCallback;
-                };
-                const script = document.createElement('script');
-                script.src = `${WEB_APP_URL}?action=getPlayers&callback=__jsonpCallback`;
-                script.onerror = function() {
-                    tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-red-400">Failed to load live sheet roster. Ensure Google Apps Script Web App is published with access set to "Anyone".</td></tr>`;
-                };
-                document.body.appendChild(script);
-            }
+                delete window.__jsonpCallback;
+            };
+            const script = document.createElement('script');
+            script.src = `${WEB_APP_URL}?action=getPlayers&callback=__jsonpCallback`;
+            script.onerror = function() {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-red-400">Failed to load live sheet roster. Ensure Google Apps Script Web App is published with access set to "Anyone".</td></tr>`;
+            };
+            document.body.appendChild(script);
+        }
+    }
+
+    function renderRosterTable(players) {
+        const tbody = document.getElementById("roster-table-body");
+        if (!Array.isArray(players) || players.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-500">No players found in Google Sheet.</td></tr>`;
+            return;
         }
 
-        function renderRosterTable(players) {
-            const tbody = document.getElementById("roster-table-body");
-            if (!Array.isArray(players) || players.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-500">No players found in Google Sheet.</td></tr>`;
-                return;
-            }
+        tbody.innerHTML = "";
+        players.forEach(p => {
+            tbody.innerHTML += `
+                <tr class="hover:bg-slate-950/50">
+                    <td class="p-2.5 font-medium text-white">${p.name || p.Name || ''}</td>
+                    <td class="p-2.5 text-slate-400">${p.gradClass || p.Grad || ''}</td>
+                    <td class="p-2.5 text-orange-400 font-semibold">${p.squad || p.Squad || ''}</td>
+                    <td class="p-2.5 text-slate-300">${p.position || p.Position || ''}</td>
+                </tr>
+            `;
+        });
+    }
 
-            tbody.innerHTML = "";
-            players.forEach(p => {
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-950/50">
-                        <td class="p-2.5 font-medium text-white">${p.name || p.Name || ''}</td>
-                        <td class="p-2.5 text-slate-400">${p.gradClass || p.Grad || ''}</td>
-                        <td class="p-2.5 text-orange-400 font-semibold">${p.squad || p.Squad || ''}</td>
-                        <td class="p-2.5 text-slate-300">${p.position || p.Position || ''}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        window.onload = initApp;
-    </script>
+    window.onload = initApp;
+</script>
 </body>
 </html>
