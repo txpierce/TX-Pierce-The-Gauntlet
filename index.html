@@ -817,49 +817,62 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
-                alert(`Player ${name} added successfully!`);
+                alert(`Player ${name} sent to Google Sheet successfully!`);
                 document.getElementById("add-player-name").value = "";
                 document.getElementById("add-player-pos").value = "";
-                loadGoogleSheetRoster();
+                setTimeout(loadGoogleSheetRoster, 1500);
             } catch (err) {
-                console.warn("API network restricted. Adding to local view.");
-                alert(`Player ${name} added locally!`);
-                document.getElementById("add-player-name").value = "";
-                document.getElementById("add-player-pos").value = "";
+                console.error(err);
+                alert("Error sending player to Google Sheet.");
             }
         }
 
         async function loadGoogleSheetRoster() {
             const tbody = document.getElementById("roster-table-body");
-            tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-500">Fetching player roster...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-500">Fetching live roster directly from Google Sheet...</td></tr>`;
 
             try {
-                const res = await fetch(`${WEB_APP_URL}?action=getPlayers`);
-                const players = await res.json();
-
-                if (!players || players.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-500">No players found in sheet.</td></tr>`;
-                    return;
-                }
-
-                tbody.innerHTML = "";
-                players.forEach(p => {
-                    tbody.innerHTML += `
-                        <tr class="hover:bg-slate-950/50">
-                            <td class="p-2.5 font-medium text-white">${p.name}</td>
-                            <td class="p-2.5 text-slate-400">${p.gradClass}</td>
-                            <td class="p-2.5 text-orange-400 font-semibold">${p.squad}</td>
-                            <td class="p-2.5 text-slate-300">${p.position}</td>
-                        </tr>
-                    `;
+                // Attempt standard CORS fetch first
+                const response = await fetch(`${WEB_APP_URL}?action=getPlayers`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
                 });
+                const players = await response.json();
+                renderRosterTable(players);
             } catch (err) {
-                tbody.innerHTML = `
-                    <tr class="hover:bg-slate-950/50"><td class="p-2.5 font-medium text-white">Connor Teykl</td><td class="p-2.5 text-slate-400">2029</td><td class="p-2.5 text-orange-400 font-semibold">Squad 1</td><td class="p-2.5 text-slate-300">SS / RHP</td></tr>
-                    <tr class="hover:bg-slate-950/50"><td class="p-2.5 font-medium text-white">Tx Pierce</td><td class="p-2.5 text-slate-400">2028</td><td class="p-2.5 text-orange-400 font-semibold">Squad 2</td><td class="p-2.5 text-slate-300">C / 3B</td></tr>
-                    <tr class="hover:bg-slate-950/50"><td class="p-2.5 font-medium text-white">Jeff Quillin</td><td class="p-2.5 text-slate-400">2027</td><td class="p-2.5 text-orange-400 font-semibold">Squad 3</td><td class="p-2.5 text-slate-400">RHP / OF</td></tr>
-                `;
+                console.warn("CORS fetch blocked in sandbox, switching to JSONP callback...", err);
+                // Fallback to JSONP script injection to bypass sandbox CORS restrictions
+                window.__jsonpCallback = function(players) {
+                    renderRosterTable(players);
+                    delete window.__jsonpCallback;
+                };
+                const script = document.createElement('script');
+                script.src = `${WEB_APP_URL}?action=getPlayers&callback=__jsonpCallback`;
+                script.onerror = function() {
+                    tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-red-400">Failed to load live sheet roster. Ensure Google Apps Script Web App is published with access set to "Anyone".</td></tr>`;
+                };
+                document.body.appendChild(script);
             }
+        }
+
+        function renderRosterTable(players) {
+            const tbody = document.getElementById("roster-table-body");
+            if (!Array.isArray(players) || players.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-500">No players found in Google Sheet.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = "";
+            players.forEach(p => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-950/50">
+                        <td class="p-2.5 font-medium text-white">${p.name || p.Name || ''}</td>
+                        <td class="p-2.5 text-slate-400">${p.gradClass || p.Grad || ''}</td>
+                        <td class="p-2.5 text-orange-400 font-semibold">${p.squad || p.Squad || ''}</td>
+                        <td class="p-2.5 text-slate-300">${p.position || p.Position || ''}</td>
+                    </tr>
+                `;
+            });
         }
 
         window.onload = initApp;
