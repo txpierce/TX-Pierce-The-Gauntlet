@@ -111,7 +111,7 @@
                     </div>
 
                     <p id="stage-description" class="text-slate-300 text-sm md:text-base leading-relaxed mb-6">
-                        Focus on opening the hips, activating the thoracic spine, and priming the ankles for sharp deceleration. Light jogs, high knees, butt kicks, karaoke, lateral shuffles, World's Greatest Stretch, spiderman crawls, leg swings, and pogo hops.
+                        Focus on opening the hips, activating the thoracic spine, and priming the ankles for sharp deceleration. Light jogs, high knees, butt kicks, karaoke, lateral shuffles (40ft), World's Greatest Stretch, spiderman crawls, leg swings, and pogo hops.
                     </p>
                 </div>
 
@@ -306,10 +306,8 @@
 
     <!-- JAVASCRIPT APP STATE MACHINE & UI LOGIC -->
     <script>
-        // Google Apps Script Web App URL provided by user
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwvEgyc6itMpuu3xE_hwV4_-3gNo5BAaCRgymGsuGsNbJaMdRt77el8kLD1jFykJhGQ/exec";
 
-        // 75-Minute Master Practice Itinerary (Total 4500 seconds)
         const PHASES = [
             { id: 0, name: "Dynamic Warm-Up & Movement Prep", duration: 720, badge: "Phase 1", desc: "Focus on opening hips, activating thoracic spine, and priming ankles for sharp deceleration. Light jogs, high knees, butt kicks, karaoke, lateral shuffles (40ft), World's Greatest Stretch, spiderman crawls, leg swings, and inchworms. Finish with 3 sets of 5 pogo hops and 2 build-up sprints." },
             { id: 1, name: "Rules Brief & Partner Pairings", duration: 360, badge: "Phase 2", desc: "Bring team together at home plate. Establish the 45-minute master clock standard, lock in partner matchups for head-to-head competition, and review strict penalties for mental errors." },
@@ -325,12 +323,10 @@
         let masterInterval = null;
         let soundEnabled = true;
 
-        // Gauntlet Circuit Sub-State
-        let gauntletRound = 1; // 1, 2, or 3
+        let gauntletRound = 1;
         const roundDurations = { 1: 120, 2: 90, 3: 60 };
         let activeStationNumber = 1;
 
-        // Interactive Station States
         let stationState = {
             1: { partnerA: "Player 1", partnerB: "Player 2", reps: 0 },
             2: { throws: 0, target: 16 },
@@ -340,7 +336,6 @@
             6: { trips: 0, weight: "45 lbs" }
         };
 
-        // Squad Standings Data
         let squads = [
             { id: "Squad 1", name: "Squad 1 (Infield)", points: 18, penalties: 0 },
             { id: "Squad 2", name: "Squad 2 (Outfield)", points: 15, penalties: 1 },
@@ -364,7 +359,6 @@
             document.getElementById("stage-title").innerText = phase.name;
             document.getElementById("stage-description").innerText = phase.desc;
 
-            // Update Phase Navigation Pills UI
             const pills = document.querySelectorAll(".phase-pill");
             pills.forEach((pill, idx) => {
                 if (idx === currentPhaseIndex) {
