@@ -1,624 +1,787 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Gauntlet - High School Baseball Command Center</title>
+    <title>The Gauntlet - Baseball Practice Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #1a73e8;
-            --primary-dark: #0d47a1;
-            --dark: #202124;
-            --light: #f8f9fa;
-            --danger: #d93025;
-            --success: #1e8e3e;
-            --warning: #f9ab00;
-            --card-bg: #ffffff;
-            --border: #dadce0;
+        body { font-family: 'Inter', sans-serif; }
+        .glow { box-shadow: 0 0 30px rgba(234, 88, 12, 0.35); }
+        .glow-red { box-shadow: 0 0 30px rgba(220, 38, 38, 0.45); }
+        .glow-emerald { box-shadow: 0 0 30px rgba(16, 185, 129, 0.35); }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 0.4; }
+            100% { transform: scale(0.95); opacity: 0.8; }
         }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--light);
-            color: var(--dark);
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1300px;
-            margin: 0 auto;
-        }
-        header {
-            background: var(--dark);
-            color: white;
-            padding: 24px;
-            border-radius: 12px;
-            text-align: center;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        header h1 { margin: 0 0 8px 0; font-size: 2.2rem; letter-spacing: 0.5px; }
-        header p { margin: 0; color: #bdc1c6; font-size: 1.05rem; }
-
-        /* MASTER TIMER BANNER */
-        .timer-banner {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            padding: 30px;
-            border-radius: 14px;
-            text-align: center;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 20px rgba(26,115,232,0.35);
-        }
-        .current-phase {
-            font-size: 1.25rem;
-            font-weight: 700;
-            background: rgba(255,255,255,0.2);
-            display: inline-block;
-            padding: 6px 18px;
-            border-radius: 20px;
-            margin-bottom: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .timer-display {
-            font-size: 5rem;
-            font-weight: 900;
-            font-family: monospace;
-            margin: 10px 0;
-            letter-spacing: 3px;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-        .sub-phase-desc {
-            font-size: 1.15rem;
-            margin-bottom: 20px;
-            color: #e8f0fe;
-        }
-        .timer-controls {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        /* GRID LAYOUTS */
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            margin-bottom: 25px;
-        }
-        @media(max-width: 900px) {
-            .grid-2 { grid-template-columns: 1fr; }
-        }
-
-        .card {
-            background: var(--card-bg);
-            padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-            border: 1px solid var(--border);
-            margin-bottom: 25px;
-        }
-        .card h3 { 
-            margin-top: 0; 
-            color: var(--primary); 
-            border-bottom: 2px solid var(--light); 
-            padding-bottom: 10px; 
-            font-size: 1.3rem;
-        }
-
-        /* FORM & BUTTON ELEMENTS */
-        .form-group { margin-bottom: 16px; }
-        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; color: #3c4043; }
-        input, select {
-            width: 100%;
-            padding: 11px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 1rem;
-            background: #fff;
-        }
-        button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 11px 20px;
-            border-radius: 8px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        button:hover { background-color: #1557b0; transform: translateY(-1px); }
-        .btn-danger { background-color: var(--danger); }
-        .btn-danger:hover { background-color: #a51d13; }
-        .btn-warning { background-color: var(--warning); color: #202124; }
-        .btn-warning:hover { background-color: #e09900; }
-        .btn-success { background-color: var(--success); }
-        .btn-success:hover { background-color: #176f31; }
-        .btn-dark { background-color: var(--dark); }
-
-        /* SQUAD STATUS BOARDS */
-        .squad-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-        .squad-card {
-            background: var(--light);
-            padding: 16px;
-            border-radius: 10px;
-            text-align: center;
-            border-left: 5px solid var(--primary);
-            border: 1px solid var(--border);
-        }
-        .squad-card h4 { margin: 0 0 6px 0; font-size: 1.1rem; color: var(--dark); }
-        .squad-score { font-size: 1.4rem; font-weight: 800; color: var(--success); }
-
-        /* STATION BREAKDOWN LIST */
-        .station-item {
-            background: var(--light);
-            padding: 14px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border: 1px solid var(--border);
-        }
-        .station-item h4 { margin: 0 0 4px 0; color: var(--primary-dark); font-size: 1rem; }
-        .station-item p { margin: 0; font-size: 0.88rem; color: #5f6368; }
-
-        /* TABLES */
-        table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.95rem; }
-        th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
-        th { background-color: var(--primary); color: white; }
-        tr:nth-child(even) { background-color: #f8f9fa; }
-
-        .status-msg { margin-top: 10px; font-weight: 700; font-size: 0.9rem; }
-        
-        .tab-buttons {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .tab-btn {
-            background: #e0e0e0;
-            color: #333;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 700;
-            cursor: pointer;
-        }
-        .tab-btn.active {
-            background: var(--primary);
-            color: white;
-        }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        .pulse-ring { animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
     </style>
 </head>
-<body>
+<body class="bg-slate-950 text-slate-100 h-full flex flex-col overflow-x-hidden selection:bg-orange-500 selection:text-white">
 
-<div class="container">
-    <header>
-        <h1>⚾ The Gauntlet: High School Baseball Command Center</h1>
-        <p>75-Minute Full Practice Itinerary State Machine & Google Sheets Integrated System</p>
+    <!-- HEADER NAVIGATION & MASTER TIMER -->
+    <header class="bg-slate-900 border-b border-slate-800 px-4 md:px-8 py-4 flex flex-col xl:flex-row justify-between items-center shrink-0 gap-4 shadow-2xl z-20">
+        <div class="flex items-center space-x-3 w-full xl:w-auto justify-between xl:justify-start">
+            <div class="flex items-center space-x-3">
+                <div class="bg-gradient-to-tr from-orange-600 to-amber-500 p-2.5 rounded-2xl font-black text-2xl tracking-wider text-white shadow-lg shadow-orange-600/30 flex items-center gap-2">
+                    ⚡ GAUNTLET
+                </div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-black tracking-tight text-white uppercase italic">High School Baseball Command</h1>
+                    <p class="text-xs text-slate-400 font-medium">Tx Pierce • Full Practice Itinerary & Circuit Automation</p>
+                </div>
+            </div>
+            <!-- Mobile Sound Toggle -->
+            <button onclick="toggleAudio()" id="audio-toggle-btn" class="xl:hidden bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-xl text-xs font-bold transition">
+                🔊 Sound On
+            </button>
+        </div>
+
+        <!-- MASTER CLOCK DISPLAY & CONTROLS -->
+        <div class="flex flex-wrap items-center justify-center bg-slate-950 px-5 py-3 rounded-2xl border border-slate-800 gap-4 md:gap-6 shadow-inner w-full xl:w-auto">
+            <div class="text-center xl:text-right">
+                <div id="master-phase-label" class="text-[11px] uppercase tracking-widest text-orange-400 font-extrabold">0:00 - 0:12 | Warm-Up</div>
+                <div id="master-timer" class="text-3xl md:text-4xl font-black font-mono tracking-wider text-white">75:00</div>
+            </div>
+            <div class="flex items-center space-x-2 border-t xl:border-t-0 xl:border-l border-slate-800 pt-3 xl:pt-0 xl:pl-5">
+                <button onclick="toggleMasterTimer()" id="master-play-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all shadow-lg shadow-emerald-600/20 flex items-center gap-1.5">
+                    ▶ Start Practice
+                </button>
+                <button onclick="resetMasterTimer()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl text-sm transition-all">
+                    ↺ Reset
+                </button>
+                <button onclick="skipPhase()" class="bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 border border-orange-500/30 px-3 py-2 rounded-xl text-sm font-semibold transition-all">
+                    Skip ⏭
+                </button>
+                <button onclick="toggleAudio()" id="audio-toggle-btn-desktop" class="hidden xl:flex bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl text-sm font-semibold transition items-center gap-1">
+                    🔊 Sound
+                </button>
+            </div>
+        </div>
     </header>
 
-    <!-- NAVIGATION TABS -->
-    <div class="tab-buttons">
-        <button class="tab-btn active" onclick="switchTab('command')">Master Command & Timer</button>
-        <button class="tab-btn" onclick="switchTab('stations')">Station Specs & Guide</button>
-        <button class="tab-btn" onclick="switchTab('roster')">Roster & Google Sheets</button>
-    </div>
+    <!-- MAIN APP GRID CONTAINER -->
+    <main class="flex-1 p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-[1750px] mx-auto w-full overflow-y-auto">
 
-    <!-- TAB 1: MASTER COMMAND & TIMER -->
-    <div id="tab-command" class="tab-content active">
-        <!-- TIMER BANNER -->
-        <div class="timer-banner">
-            <div id="phaseIndicator" class="current-phase">Phase: Ready to Start</div>
-            <div id="timerDisplay" class="timer-display">75:00</div>
-            <div id="subPhaseDesc" class="sub-phase-desc">Master clock controlling full practice timeline</div>
-            <div class="timer-controls">
-                <button class="btn-success" onclick="startPracticeClock()">Start Practice</button>
-                <button class="btn-warning" onclick="pausePracticeClock()">Pause</button>
-                <button class="btn-danger" onclick="resetPracticeClock()">Reset Clock</button>
-                <button onclick="applyPenaltyTime(-5)">Penalty: -5s (Error)</button>
-                <button class="btn-warning" onclick="triggerCallback()">Trigger Call-Back</button>
+        <!-- LEFT COLUMN: PRACTICE PHASES & ACTIVE STATION WORKBENCH (7 Cols) -->
+        <div class="lg:col-span-7 flex flex-col gap-6">
+
+            <!-- 75-MINUTE ITINERARY PHASE NAVIGATOR -->
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-xl">
+                <h2 class="text-xs uppercase tracking-wider text-slate-400 font-bold mb-3 flex justify-between items-center">
+                    <span>75-Minute Practice Itinerary Roadmap</span>
+                    <span id="itinerary-status-badge" class="bg-orange-500/20 text-orange-400 border border-orange-500/30 text-[10px] px-2.5 py-0.5 rounded-full font-bold">Active Phase</span>
+                </h2>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 text-center" id="phase-nav-grid">
+                    <div onclick="jumpToPhase(0)" class="phase-pill cursor-pointer p-2.5 rounded-xl bg-orange-600 text-white font-bold text-xs transition border border-orange-500 shadow-md">
+                        1. Warm-Up<span class="block text-[10px] font-normal opacity-80">12 Mins</span>
+                    </div>
+                    <div onclick="jumpToPhase(1)" class="phase-pill cursor-pointer p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-bold text-xs transition border border-slate-700">
+                        2. Rules Brief<span class="block text-[10px] font-normal opacity-80">6 Mins</span>
+                    </div>
+                    <div onclick="jumpToPhase(2)" class="phase-pill cursor-pointer p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-bold text-xs transition border border-slate-700">
+                        3. The Gauntlet<span class="block text-[10px] font-normal opacity-80">45 Mins</span>
+                    </div>
+                    <div onclick="jumpToPhase(3)" class="phase-pill cursor-pointer p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-bold text-xs transition border border-slate-700">
+                        4. Finisher<span class="block text-[10px] font-normal opacity-80">5 Mins</span>
+                    </div>
+                    <div onclick="jumpToPhase(4)" class="phase-pill cursor-pointer p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-bold text-xs transition border border-slate-700 col-span-2 sm:col-span-1">
+                        5. Cool-Down<span class="block text-[10px] font-normal opacity-80">7 Mins</span>
+                    </div>
+                </div>
             </div>
+
+            <!-- ACTIVE STAGE & STATION DISPLAY CARD -->
+            <div id="active-stage-card" class="bg-gradient-to-br from-slate-900 to-slate-900/95 border border-slate-800 rounded-3xl p-6 shadow-2xl relative overflow-hidden flex-1 flex flex-col justify-between">
+                
+                <div class="absolute -right-24 -top-24 w-80 h-80 bg-orange-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+                        <div>
+                            <span id="stage-badge" class="bg-orange-500 text-slate-950 font-black text-xs px-3 py-1 rounded-full uppercase tracking-wider">Phase 1</span>
+                            <h2 id="stage-title" class="text-2xl md:text-3xl font-black text-white mt-2 tracking-tight">Dynamic Warm-Up & Movement Prep</h2>
+                        </div>
+                        <div class="text-left sm:text-right bg-slate-950/80 px-4 py-2 rounded-2xl border border-slate-800">
+                            <div class="text-[10px] text-slate-400 font-semibold uppercase" id="timer-label-title">Phase Timer</div>
+                            <div id="station-timer" class="text-3xl md:text-4xl font-mono font-black text-orange-400 tracking-wider">12:00</div>
+                        </div>
+                    </div>
+
+                    <p id="stage-description" class="text-slate-300 text-sm md:text-base leading-relaxed mb-6">
+                        Focus on opening the hips, activating the thoracic spine, and priming the ankles for sharp deceleration. Light jogs, high knees, butt kicks, karaoke, lateral shuffles, World's Greatest Stretch, spiderman crawls, leg swings, and pogo hops.
+                    </p>
+                </div>
+
+                <!-- GAUNTLET CIRCUIT SUB-CONTROLLER & 6 STATION WORKBENCH (Visible in Phase 3) -->
+                <div id="gauntlet-circuit-panel" class="hidden bg-slate-950/90 border border-orange-500/30 rounded-2xl p-5 mb-4 backdrop-blur-md shadow-xl">
+                    <div class="flex flex-col sm:flex-row justify-between items-center mb-4 pb-3 border-b border-slate-800 gap-3">
+                        <div class="flex items-center gap-3">
+                            <span id="circuit-round-badge" class="bg-red-600 text-white font-bold text-xs px-3 py-1 rounded-xl uppercase shadow">Round 1: Base</span>
+                            <span id="circuit-mode-desc" class="text-xs text-slate-300 font-medium">2:00 per station | 15s sprint transition</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="advanceGauntletRound()" class="bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition shadow">Next Round ⏭</button>
+                            <button onclick="triggerSprintTransition()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition shadow">Sprint (15s)</button>
+                        </div>
+                    </div>
+
+                    <!-- 6 STATIONS SELECTOR GRID -->
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2.5 mb-5" id="station-selector-grid">
+                        <div onclick="selectStation(1)" id="station-btn-1" class="station-btn bg-slate-900 border-2 border-orange-500 p-3 rounded-xl cursor-pointer transition shadow">
+                            <div class="text-[10px] text-orange-400 font-black uppercase">Station 1</div>
+                            <div class="text-xs font-bold text-white mt-0.5 truncate">Reactive Mirror</div>
+                        </div>
+                        <div onclick="selectStation(2)" id="station-btn-2" class="station-btn bg-slate-900 border border-slate-800 p-3 rounded-xl cursor-pointer transition hover:border-slate-700">
+                            <div class="text-[10px] text-orange-400 font-black uppercase">Station 2</div>
+                            <div class="text-xs font-bold text-white mt-0.5 truncate">Med-Ball Shot-Put</div>
+                        </div>
+                        <div onclick="selectStation(3)" id="station-btn-3" class="station-btn bg-slate-900 border border-slate-800 p-3 rounded-xl cursor-pointer transition hover:border-slate-700">
+                            <div class="text-[10px] text-orange-400 font-black uppercase">Station 3</div>
+                            <div class="text-xs font-bold text-white mt-0.5 truncate">60-Ft Steal Starts</div>
+                        </div>
+                        <div onclick="selectStation(4)" id="station-btn-4" class="station-btn bg-slate-900 border border-slate-800 p-3 rounded-xl cursor-pointer transition hover:border-slate-700">
+                            <div class="text-[10px] text-orange-400 font-black uppercase">Station 4</div>
+                            <div class="text-xs font-bold text-white mt-0.5 truncate">Barehand Short-Hops</div>
+                        </div>
+                        <div onclick="selectStation(5)" id="station-btn-5" class="station-btn bg-slate-900 border border-slate-800 p-3 rounded-xl cursor-pointer transition hover:border-slate-700">
+                            <div class="text-[10px] text-orange-400 font-black uppercase">Station 5</div>
+                            <div class="text-xs font-bold text-white mt-0.5 truncate">Lateral Hurdle Burst</div>
+                        </div>
+                        <div onclick="selectStation(6)" id="station-btn-6" class="station-btn bg-slate-900 border border-slate-800 p-3 rounded-xl cursor-pointer transition hover:border-slate-700">
+                            <div class="text-[10px] text-orange-400 font-black uppercase">Station 6</div>
+                            <div class="text-xs font-bold text-white mt-0.5 truncate">Heavy Farmer's Carry</div>
+                        </div>
+                    </div>
+
+                    <!-- ACTIVE STATION INTERACTIVE WORKBENCH CARD -->
+                    <div id="station-workbench-view" class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                        <!-- Populated dynamically by JS based on selected station -->
+                    </div>
+                </div>
+
+                <!-- COACH ENFORCEMENT & PENALTY PANEL -->
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div>
+                        <div class="text-xs font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                            <span>🛡️ Coach Enforcement Panel</span>
+                        </div>
+                        <div class="text-[11px] text-slate-400">Tap to instantly deduct master time or trigger resets</div>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="applyPenalty('Hands on Knees (-5s)', 5)" class="bg-red-950 hover:bg-red-900 text-red-300 border border-red-800/60 text-xs font-bold px-3 py-2 rounded-xl transition shadow flex items-center gap-1">
+                            ⚠️ Hands on Knees (-5s)
+                        </button>
+                        <button onclick="applyPenalty('Missed Line (-3s)', 3)" class="bg-red-950 hover:bg-red-900 text-red-300 border border-red-800/60 text-xs font-bold px-3 py-2 rounded-xl transition shadow flex items-center gap-1">
+                            ❌ Missed Line (-3s)
+                        </button>
+                        <button onclick="triggerStationReset()" class="bg-amber-950 hover:bg-amber-900 text-amber-300 border border-amber-800/60 text-xs font-bold px-3 py-2 rounded-xl transition shadow flex items-center gap-1">
+                            🔄 Station Reset
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
         </div>
 
-        <!-- SQUAD STATUS BOARD -->
-        <div class="card">
-            <h3>Squads Live Standings & Accountability Status</h3>
-            <p style="font-size: 0.9rem; color: #5f6368; margin-top:0;">Tied to the shared fate master clock. One error punishes the entire squad.</p>
-            <div class="squad-grid" id="squadGrid">
-                <!-- Populated by JS -->
-            </div>
-        </div>
+        <!-- RIGHT COLUMN: SQUAD LEADERBOARD, GOOGLE SHEETS API LOGGER & ROSTER (5 Cols) -->
+        <div class="lg:col-span-5 flex flex-col gap-6">
 
-        <!-- QUICK LOGGING & ENFORCEMENT -->
-        <div class="grid-2">
-            <div class="card">
-                <h3>Log Station Reps, Streaks, or Penalties</h3>
-                <form id="metricForm" onsubmit="handleMetricSubmit(event)">
-                    <div class="form-group">
-                        <label for="logSquad">Squad:</label>
-                        <select id="logSquad">
-                            <option value="Squad 1">Squad 1</option>
-                            <option value="Squad 2">Squad 2</option>
-                            <option value="Squad 3">Squad 3</option>
-                            <option value="Squad 4">Squad 4</option>
-                            <option value="Squad 5">Squad 5</option>
-                            <option value="Squad 6">Squad 6</option>
-                        </select>
+            <!-- SQUAD ACCOUNTABILITY LEADERBOARD -->
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl shadow-xl flex flex-col gap-4">
+                <div class="flex justify-between items-center pb-3 border-b border-slate-800">
+                    <h2 class="text-sm font-black uppercase tracking-wider text-white flex items-center gap-2">
+                        <span>🏆 Squad Accountability Standings</span>
+                    </h2>
+                    <span class="text-xs text-orange-400 font-semibold">Shared Clock & Fate</span>
+                </div>
+
+                <div class="space-y-2.5" id="squad-standings-container">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- GOOGLE SHEETS API LOGGER -->
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl shadow-xl flex flex-col gap-4">
+                <div class="flex justify-between items-center pb-3 border-b border-slate-800">
+                    <h2 class="text-sm font-black uppercase tracking-wider text-white flex items-center gap-1.5">
+                        <span>📊 Google Sheets API Logger</span>
+                    </h2>
+                    <span id="sync-status" class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">API Connected</span>
+                </div>
+
+                <form onsubmit="submitGauntletMetric(event)" class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1">Squad</label>
+                            <select id="log-squad-select" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:border-orange-500 focus:outline-none">
+                                <option value="Squad 1">Squad 1 (Infield)</option>
+                                <option value="Squad 2">Squad 2 (Outfield)</option>
+                                <option value="Squad 3">Squad 3 (Pitchers)</option>
+                                <option value="Squad 4">Squad 4 (Catchers)</option>
+                                <option value="Squad 5">Squad 5 (Corner IF)</option>
+                                <option value="Squad 6">Squad 6 (Freshmen)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1">Station</label>
+                            <select id="log-station-select" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:border-orange-500 focus:outline-none">
+                                <option value="Station 1: Reactive Mirror">St 1: Reactive Mirror</option>
+                                <option value="Station 2: Med-Ball Shot-Put">St 2: Med-Ball Shot-Put</option>
+                                <option value="Station 3: 60-Ft Steal Starts">St 3: 60-Ft Steal Starts</option>
+                                <option value="Station 4: Barehand Short-Hops">St 4: Barehand Short-Hops</option>
+                                <option value="Station 5: Lateral Hurdle Burst">St 5: Hurdle Burst</option>
+                                <option value="Station 6: Heavy Farmer's Carry">St 6: Farmer's Carry</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="station">Station:</label>
-                        <select id="station">
-                            <option value="Station 1: Reactive Mirror">Station 1: Reactive Mirror & Shuttles</option>
-                            <option value="Station 2: Rotational Med-Ball">Station 2: Rotational Med-Ball</option>
-                            <option value="Station 3: Steal Starts">Station 3: 60-Ft Steal Starts & Box</option>
-                            <option value="Station 4: Barehand Short-Hops">Station 4: Barehand Short-Hops (Streak)</option>
-                            <option value="Station 5: Hurdle Burst">Station 5: Lateral Hurdle Burst</option>
-                            <option value="Station 6: Farmer's Carry">Station 6: Heavy Farmer's Carry</option>
-                        </select>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1">Metric Type</label>
+                            <select id="log-metric-type" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:border-orange-500 focus:outline-none">
+                                <option value="Reps">Reps Completed</option>
+                                <option value="Catch Streak">Clean Catch Streak</option>
+                                <option value="Penalty (-5s)">Penalty (-5s / Error)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1">Value / Count</label>
+                            <input type="number" id="log-metric-value" required placeholder="e.g. 18" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:border-orange-500 focus:outline-none">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="metricType">Metric Type:</label>
-                        <select id="metricType">
-                            <option value="Reps">Reps Completed</option>
-                            <option value="Catch Streak">Clean Catch Streak (Station 4)</option>
-                            <option value="Penalty (-5s)">Penalty (-5s / Mental Error)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="value">Value / Count:</label>
-                        <input type="number" id="value" required placeholder="e.g. 15">
-                    </div>
-                    <button type="submit">Log to Google Sheet</button>
-                    <div id="metricStatus" class="status-msg"></div>
+
+                    <button type="submit" class="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-lg shadow-orange-600/20">
+                        Record & Sync to Google Sheet 🚀
+                    </button>
+                    <div id="log-feedback" class="text-xs text-center font-medium h-4"></div>
                 </form>
             </div>
 
-            <div class="card">
-                <h3>Enforcement Rules & Quick Actions</h3>
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <button class="btn-warning" onclick="applyPenaltyTime(-5)">Apply -5s Clock Penalty (Missed Line / Slouching)</button>
-                    <button class="btn-danger" onclick="triggerCallback()">Trigger Station Call-Back (Jogging Transition)</button>
-                    <button class="btn-dark" onclick="triggerPerfectionReset()">Trigger Round 3 Perfection Reset (Drop/Overrun)</button>
+            <!-- ADD PLAYER & ROSTER VIEWER -->
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl shadow-xl flex flex-col gap-4 flex-1">
+                <div class="flex justify-between items-center pb-3 border-b border-slate-800">
+                    <h2 class="text-sm font-black uppercase tracking-wider text-white">📋 Roster & Player Manager</h2>
+                    <button onclick="loadGoogleSheetRoster()" class="text-xs text-orange-400 hover:underline font-semibold">🔄 Refresh Sheet</button>
                 </div>
-                <div style="margin-top: 15px; padding: 12px; background: #fff8e1; border-left: 4px solid var(--warning); border-radius: 6px;">
-                    <strong>Coach Note:</strong> In Round 3 (Perfection Standard), any dropped ball at Station 4 or deceleration overrun at Station 3 freezes the team and restarts that squad's 60-second clock.
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- TAB 2: STATION SPECS & GUIDE -->
-    <div id="tab-stations" class="tab-content">
-        <div class="card">
-            <h3>Complete 75-Minute Program Itinerary & Stations</h3>
-            <div class="station-item">
-                <h4>0:00 – 0:12 | Dynamic Warm-Up & Movement Prep</h4>
-                <p>Light jogs, high knees, butt kicks, karaoke, lateral shuffles, World's Greatest Stretch, spiderman crawls, leg swings, inchworms, pogo hops, build-up sprints, and deceleration stops.</p>
-            </div>
-            <div class="station-item">
-                <h4>0:12 – 0:18 | Rules Brief & Partner Pairings</h4>
-                <p>Home plate huddle establishing the 45-minute master clock, locking in head-to-head partner matchups, and reviewing mental error penalties.</p>
-            </div>
-            <div class="station-item">
-                <h4>0:18 – 1:03 | The Baseball Gauntlet (45-Minute Master Clock)</h4>
-                <p>Clockwise rotation (15s sprint transitions). Round 1 (Base: 2:00/stn + 3m break) → Round 2 (Tempo: 1:30/stn + 3m break) → Round 3 (Perfection: 1:00/stn, zero-defect standard).</p>
-            </div>
-            <div class="station-item">
-                <h4>Station 1: Reactive Mirror & 10-Yard First-Step Shuttles</h4>
-                <p>Partners face in low fielding crouch. Partner A shuffles 5 yds, touches line, sprints 10 yds through finish cone; Partner B mirrors and races.</p>
-            </div>
-            <div class="station-item">
-                <h4>Station 2: Rotational Med-Ball Shot-Put & Scoop</h4>
-                <p>8–10 lb medicine ball against brick wall/fence. Explode from back hip into rotational throw, field rebound cleanly, fire from opposite side.</p>
-            </div>
-            <div class="station-item">
-                <h4>Station 3: 60-Foot Steal Starts & Deceleration Box</h4>
-                <p>Primary/secondary lead. Execute sharp crossover steal start on movement, sprint 60 ft, and come to complete under-control stop inside 10-ft cone box.</p>
-            </div>
-            <div class="station-item">
-                <h4>Station 4: Rapid-Fire Barehand Short-Hops</h4>
-                <p>Partners kneel/squat 10 ft apart with 1 baseball (no gloves). Rapidly roll/bounce short-hops, funneling to midline with soft hands. Any drop resets count to zero.</p>
-            </div>
-            <div class="station-item">
-                <h4>Station 5: Lateral Hurdle Hops & 15-Yard Burst</h4>
-                <p>Three 6-inch mini-hurdles. Rapid double-leg lateral hops over all three, stick final landing, open hips into 15-yard sprint.</p>
-            </div>
-            <div class="station-item">
-                <h4>Station 6: Heavy Farmer's Carry</h4>
-                <p>40–50 lb dumbbells/kettlebells (30–35 lbs for freshmen/JV). Carry down and back along 20-yard lane with tall posture and packed shoulders.</p>
-            </div>
-            <div class="station-item">
-                <h4>1:03 – 1:08 | Championship Finisher: Team Line Drill</h4>
-                <p>2 sets of 17s (foul line to foul line or 60-yd shuttles). Strict target time (under 32s). Team finishes together or runs extra.</p>
-            </div>
-            <div class="station-item">
-                <h4>1:08 – 1:15 | Cool-Down, Breathing & Accountability Debrief</h4>
-                <p>Down-regulation walk, static hip flexor/hamstring stretches, and team huddle shoutouts for leadership and clean footwork.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- TAB 3: ROSTER & GOOGLE SHEETS -->
-    <div id="tab-roster" class="tab-content">
-        <div class="grid-2">
-            <!-- ADD PLAYER -->
-            <div class="card">
-                <h3>Add Player to Roster</h3>
-                <form id="playerForm" onsubmit="handlePlayerSubmit(event)">
-                    <div class="form-group">
-                        <label for="name">Player Name:</label>
-                        <input type="text" id="name" required placeholder="e.g. Connor Teykl">
-                    </div>
-                    <div class="form-group">
-                        <label for="gradClass">Grad Class:</label>
-                        <select id="gradClass">
-                            <option value="2027">2027 (18U/17U)</option>
-                            <option value="2028">2028 (17U)</option>
-                            <option value="2029">2029 (16U)</option>
-                            <option value="2030">2030 (15U)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="squad">Squad Assignment:</label>
-                        <select id="squad">
-                            <option value="Squad 1">Squad 1</option>
-                            <option value="Squad 2">Squad 2</option>
-                            <option value="Squad 3">Squad 3</option>
-                            <option value="Squad 4">Squad 4</option>
-                            <option value="Squad 5">Squad 5</option>
-                            <option value="Squad 6">Squad 6</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="position">Position:</label>
-                        <input type="text" id="position" placeholder="e.g. SS / RHP">
-                    </div>
-                    <button type="submit">Save Player to Google Sheet</button>
-                    <div id="playerStatus" class="status-msg"></div>
+                <!-- Quick Add Player Form -->
+                <form onsubmit="handlePlayerSubmit(event)" class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-950 p-3 rounded-2xl border border-slate-800">
+                    <input type="text" id="add-player-name" required placeholder="Player Name" class="bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white">
+                    <select id="add-player-squad" class="bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white">
+                        <option value="Squad 1">Squad 1</option>
+                        <option value="Squad 2">Squad 2</option>
+                        <option value="Squad 3">Squad 3</option>
+                        <option value="Squad 4">Squad 4</option>
+                        <option value="Squad 5">Squad 5</option>
+                        <option value="Squad 6">Squad 6</option>
+                    </select>
+                    <input type="text" id="add-player-pos" placeholder="Pos / Grad" class="bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white">
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition">Add +</button>
                 </form>
-            </div>
 
-            <!-- ROSTER VIEWER -->
-            <div class="card">
-                <h3>Live Roster Viewer</h3>
-                <button onclick="loadRoster()">Refresh Roster from Sheet</button>
-                <div style="max-height: 400px; overflow-y: auto;">
-                    <table id="rosterTable">
-                        <thead>
+                <div class="overflow-y-auto max-h-40 rounded-xl border border-slate-800">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-950 text-slate-400 sticky top-0">
                             <tr>
-                                <th>ID</th>
-                                <th>Name</th>
-                                <th>Grad</th>
-                                <th>Squad</th>
-                                <th>Pos</th>
+                                <th class="p-2.5">Name</th>
+                                <th class="p-2.5">Grad</th>
+                                <th class="p-2.5">Squad</th>
+                                <th class="p-2.5">Pos</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr><td colspan="5" style="text-align: center;">Click refresh to load players.</td></tr>
+                        <tbody id="roster-table-body" class="divide-y divide-slate-800/60">
+                            <tr><td colspan="4" class="p-3 text-center text-slate-500">Loading Google Sheet roster...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
+
         </div>
-    </div>
-</div>
 
-<script>
-    // Google Apps Script Web App URL
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwvEgyc6itMpuu3xE_hwV4_-3gNo5BAaCRgymGsuGsNbJaMdRt77el8kLD1jFykJhGQ/exec";
+    </main>
 
-    // Tab Switching
-    function switchTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        document.getElementById('tab-' + tabId).classList.add('active');
-        event.currentTarget.classList.add('active');
-    }
+    <!-- JAVASCRIPT APP STATE MACHINE & UI LOGIC -->
+    <script>
+        // Google Apps Script Web App URL provided by user
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwvEgyc6itMpuu3xE_hwV4_-3gNo5BAaCRgymGsuGsNbJaMdRt77el8kLD1jFykJhGQ/exec";
 
-    // --- 75-MINUTE STATE MACHINE TIMELINE ---
-    let totalTimeRemaining = 4500; // 75 minutes in seconds
-    let timerInterval = null;
-    let isRunning = false;
+        // 75-Minute Master Practice Itinerary (Total 4500 seconds)
+        const PHASES = [
+            { id: 0, name: "Dynamic Warm-Up & Movement Prep", duration: 720, badge: "Phase 1", desc: "Focus on opening hips, activating thoracic spine, and priming ankles for sharp deceleration. Light jogs, high knees, butt kicks, karaoke, lateral shuffles (40ft), World's Greatest Stretch, spiderman crawls, leg swings, and inchworms. Finish with 3 sets of 5 pogo hops and 2 build-up sprints." },
+            { id: 1, name: "Rules Brief & Partner Pairings", duration: 360, badge: "Phase 2", desc: "Bring team together at home plate. Establish the 45-minute master clock standard, lock in partner matchups for head-to-head competition, and review strict penalties for mental errors." },
+            { id: 2, name: "The Baseball Gauntlet Circuit", duration: 2700, badge: "Phase 3 (Circuit)", desc: "45-minute master clock across 6 stations. Round 1: 2:00/st + 15s sprint + 3:00 water break; Round 2: 1:30/st + 15s sprint + 3:00 water break; Round 3: 1:00/st + 15s sprint + Zero-defect perfection rule." },
+            { id: 3, name: "Championship Finisher: Team Line Drill", duration: 300, badge: "Phase 4", desc: "Line entire team on foul line. Run 2 sets of 17s (foul line to foul line / 60-yard shuttle) under strict target time (under 32s). Everyone finishes together or entire team runs extra reps." },
+            { id: 4, name: "Cool-Down, Breathing & Accountability Debrief", duration: 420, badge: "Phase 5", desc: "Down-regulation walk around infield followed by static hip flexor, hamstring, and forearm stretches. Team huddle calling out vocal leaders and clean footwork under fatigue." }
+        ];
 
-    function updateTimerDisplay() {
-        const mins = Math.floor(totalTimeRemaining / 60);
-        const secs = totalTimeRemaining % 60;
-        document.getElementById("timerDisplay").innerText = 
-            `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        
-        updatePhaseIndicator(totalTimeRemaining);
-    }
+        let currentPhaseIndex = 0;
+        let masterSecondsRemaining = PHASES[0].duration;
+        let stationSecondsRemaining = PHASES[0].duration;
+        let isMasterRunning = false;
+        let masterInterval = null;
+        let soundEnabled = true;
 
-    function updatePhaseIndicator(secondsLeft) {
-        const phaseEl = document.getElementById("phaseIndicator");
-        const descEl = document.getElementById("subPhaseDesc");
+        // Gauntlet Circuit Sub-State
+        let gauntletRound = 1; // 1, 2, or 3
+        const roundDurations = { 1: 120, 2: 90, 3: 60 };
+        let activeStationNumber = 1;
 
-        if (secondsLeft > 3780) { // 75:00 - 63:00
-            phaseEl.innerText = "Phase 1: Dynamic Warm-Up & Movement Prep";
-            descEl.innerText = "Opening hips, thoracic spine, ankles & CNS primers.";
-        } else if (secondsLeft > 3420) { // 63:00 - 57:00
-            phaseEl.innerText = "Phase 2: Rules Brief & Partner Pairings";
-            descEl.innerText = "Home plate huddle: Lock in partner matchups & review penalties.";
-        } else if (secondsLeft > 720) { // 57:00 - 12:00 (The Gauntlet Master Clock)
-            phaseEl.innerText = "Phase 3: The Baseball Gauntlet (45-Min Master Clock)";
-            descEl.innerText = "Clockwise station rotation (15s sprint transitions between stations).";
-        } else if (secondsLeft > 420) { // 12:00 - 07:00
-            phaseEl.innerText = "Phase 4: Championship Finisher (Team Line Drill)";
-            descEl.innerText = "2 sets of 17s. Team finishes together or runs extra!";
-        } else if (secondsLeft > 0) { // 07:00 - 00:00
-            phaseEl.innerText = "Phase 5: Cool-Down, Breathing & Debrief";
-            descEl.innerText = "Down-regulation walk, static stretching & leadership shoutouts.";
-        } else {
-            phaseEl.innerText = "Practice Concluded!";
-            descEl.innerText = "Great work today. Secure the facility.";
-            pausePracticeClock();
+        // Interactive Station States
+        let stationState = {
+            1: { partnerA: "Player 1", partnerB: "Player 2", reps: 0 },
+            2: { throws: 0, target: 16 },
+            3: { success: 0, fails: 0 },
+            4: { catchStreak: 0, maxStreak: 12 },
+            5: { reps: 0 },
+            6: { trips: 0, weight: "45 lbs" }
+        };
+
+        // Squad Standings Data
+        let squads = [
+            { id: "Squad 1", name: "Squad 1 (Infield)", points: 18, penalties: 0 },
+            { id: "Squad 2", name: "Squad 2 (Outfield)", points: 15, penalties: 1 },
+            { id: "Squad 3", name: "Squad 3 (Pitchers)", points: 13, penalties: 2 },
+            { id: "Squad 4", name: "Squad 4 (Catchers)", points: 17, penalties: 0 },
+            { id: "Squad 5", name: "Squad 5 (Corner IF)", points: 14, penalties: 1 },
+            { id: "Squad 6", name: "Squad 6 (Freshmen)", points: 12, penalties: 2 }
+        ];
+
+        function initApp() {
+            renderPhase();
+            renderSquadStandings();
+            renderStationWorkbench();
+            loadGoogleSheetRoster();
         }
-    }
 
-    function startPracticeClock() {
-        if (isRunning) return;
-        isRunning = true;
-        timerInterval = setInterval(() => {
-            if (totalTimeRemaining > 0) {
-                totalTimeRemaining--;
-                updateTimerDisplay();
+        function renderPhase() {
+            const phase = PHASES[currentPhaseIndex];
+            document.getElementById("master-phase-label").innerText = phase.badge + " | " + phase.name;
+            document.getElementById("stage-badge").innerText = phase.badge;
+            document.getElementById("stage-title").innerText = phase.name;
+            document.getElementById("stage-description").innerText = phase.desc;
+
+            // Update Phase Navigation Pills UI
+            const pills = document.querySelectorAll(".phase-pill");
+            pills.forEach((pill, idx) => {
+                if (idx === currentPhaseIndex) {
+                    pill.className = "phase-pill cursor-pointer p-2.5 rounded-xl bg-orange-600 text-white font-bold text-xs transition border border-orange-500 shadow-md scale-105";
+                } else if (idx < currentPhaseIndex) {
+                    pill.className = "phase-pill cursor-pointer p-2.5 rounded-xl bg-slate-900 text-slate-500 hover:bg-slate-800 font-bold text-xs transition border border-slate-800 opacity-60";
+                } else {
+                    pill.className = "phase-pill cursor-pointer p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-bold text-xs transition border border-slate-700";
+                }
+            });
+
+            const circuitPanel = document.getElementById("gauntlet-circuit-panel");
+            const timerLabel = document.getElementById("timer-label-title");
+
+            if (currentPhaseIndex === 2) {
+                circuitPanel.classList.remove("hidden");
+                timerLabel.innerText = "Station / Round Timer";
+                stationSecondsRemaining = roundDurations[gauntletRound];
             } else {
-                pausePracticeClock();
-            }
-        }, 1000);
-    }
-
-    function pausePracticeClock() {
-        isRunning = false;
-        clearInterval(timerInterval);
-    }
-
-    function resetPracticeClock() {
-        pausePracticeClock();
-        totalTimeRemaining = 4500;
-        updateTimerDisplay();
-    }
-
-    function applyPenaltyTime(seconds) {
-        totalTimeRemaining = Math.max(0, totalTimeRemaining + seconds);
-        updateTimerDisplay();
-        alert(`Penalty applied! ${seconds} seconds adjusted on master clock.`);
-    }
-
-    function triggerCallback() {
-        alert("🚨 SQUAD CALL-BACK TRIGGERED: Group jogged during transition! Stop and repeat previous station for 45 seconds.");
-    }
-
-    function triggerPerfectionReset() {
-        alert("🚨 ROUND 3 PERFECTION RESET: Mistake detected! Station clock reset to zero.");
-    }
-
-    // --- SQUADS INITIALIZATION ---
-    const squads = ["Squad 1", "Squad 2", "Squad 3", "Squad 4", "Squad 5", "Squad 6"];
-    function renderSquads() {
-        const grid = document.getElementById("squadGrid");
-        grid.innerHTML = "";
-        squads.forEach(s => {
-            grid.innerHTML += `
-                <div class="squad-card">
-                    <h4>${s}</h4>
-                    <div class="squad-score">Active</div>
-                    <div style="font-size: 0.8rem; color: #5f6368; margin-top: 4px;">Status: Locked In</div>
-                </div>
-            `;
-        });
-    }
-
-    // --- API & FORM HANDLERS ---
-    async function handlePlayerSubmit(event) {
-        event.preventDefault();
-        const statusDiv = document.getElementById("playerStatus");
-        statusDiv.style.color = "blue";
-        statusDiv.innerText = "Saving player to Google Sheet...";
-
-        const playerData = {
-            action: "addPlayer",
-            name: document.getElementById("name").value,
-            gradClass: document.getElementById("gradClass").value,
-            squad: document.getElementById("squad").value,
-            position: document.getElementById("position").value
-        };
-
-        try {
-            await fetch(WEB_APP_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(playerData)
-            });
-            statusDiv.style.color = "green";
-            statusDiv.innerText = "Player successfully added!";
-            document.getElementById("playerForm").reset();
-            loadRoster();
-        } catch (error) {
-            statusDiv.style.color = "red";
-            statusDiv.innerText = "Error saving player.";
-            console.error(error);
-        }
-    }
-
-    async function handleMetricSubmit(event) {
-        event.preventDefault();
-        const statusDiv = document.getElementById("metricStatus");
-        statusDiv.style.color = "blue";
-        statusDiv.innerText = "Logging metric to Sheet...";
-
-        const logData = {
-            action: "logData",
-            squadId: document.getElementById("logSquad").value,
-            station: document.getElementById("station").value,
-            metricType: document.getElementById("metricType").value,
-            value: document.getElementById("value").value
-        };
-
-        try {
-            await fetch(WEB_APP_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(logData)
-            });
-            statusDiv.style.color = "green";
-            statusDiv.innerText = "Metric logged successfully!";
-            document.getElementById("metricForm").reset();
-        } catch (error) {
-            statusDiv.style.color = "red";
-            statusDiv.innerText = "Error logging metric.";
-            console.error(error);
-        }
-    }
-
-    async function loadRoster() {
-        const tbody = document.querySelector("#rosterTable tbody");
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">Loading roster from Google Sheet...</td></tr>`;
-
-        try {
-            const response = await fetch(`${WEB_APP_URL}?action=getPlayers`);
-            const players = await response.json();
-
-            if (!Array.isArray(players) || players.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No players found in sheet.</td></tr>`;
-                return;
+                circuitPanel.classList.add("hidden");
+                timerLabel.innerText = "Phase Timer";
+                stationSecondsRemaining = phase.duration;
             }
 
-            tbody.innerHTML = "";
-            players.forEach(p => {
-                const row = `<tr>
-                    <td>${p.id}</td>
-                    <td>${p.name}</td>
-                    <td>${p.gradClass}</td>
-                    <td>${p.squad}</td>
-                    <td>${p.position}</td>
-                </tr>`;
-                tbody.innerHTML += row;
-            });
-        } catch (error) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: red;">Failed to load roster. Check Apps Script deployment.</td></tr>`;
-            console.error(error);
+            updateTimersDisplay();
         }
-    }
 
-    // Initialize UI on load
-    window.onload = function() {
-        updateTimerDisplay();
-        renderSquads();
-        loadRoster();
-    };
-</script>
+        function updateTimersDisplay() {
+            let mMin = Math.floor(masterSecondsRemaining / 60);
+            let mSec = masterSecondsRemaining % 60;
+            document.getElementById("master-timer").innerText = `${mMin.toString().padStart(2, '0')}:${mSec.toString().padStart(2, '0')}`;
 
+            let sMin = Math.floor(stationSecondsRemaining / 60);
+            let sSec = stationSecondsRemaining % 60;
+            document.getElementById("station-timer").innerText = `${sMin.toString().padStart(2, '0')}:${sSec.toString().padStart(2, '0')}`;
+        }
+
+        function toggleMasterTimer() {
+            if (isMasterRunning) {
+                clearInterval(masterInterval);
+                isMasterRunning = false;
+                document.getElementById("master-play-btn").innerHTML = "▶ Start Practice";
+                document.getElementById("master-play-btn").className = "bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all shadow-lg shadow-emerald-600/20 flex items-center gap-1.5";
+            } else {
+                isMasterRunning = true;
+                document.getElementById("master-play-btn").innerHTML = "⏸ Pause";
+                document.getElementById("master-play-btn").className = "bg-amber-600 hover:bg-amber-500 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all shadow-lg shadow-amber-600/20 flex items-center gap-1.5";
+                
+                masterInterval = setInterval(() => {
+                    if (masterSecondsRemaining > 0) masterSecondsRemaining--;
+                    if (stationSecondsRemaining > 0) stationSecondsRemaining--;
+                    
+                    updateTimersDisplay();
+
+                    if (masterSecondsRemaining === 0) {
+                        clearInterval(masterInterval);
+                        isMasterRunning = false;
+                        playBeep();
+                        alert("The 75-Minute Practice session has officially concluded!");
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetMasterTimer() {
+            clearInterval(masterInterval);
+            isMasterRunning = false;
+            currentPhaseIndex = 0;
+            masterSecondsRemaining = PHASES[0].duration;
+            document.getElementById("master-play-btn").innerHTML = "▶ Start Practice";
+            document.getElementById("master-play-btn").className = "bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all shadow-lg shadow-emerald-600/20 flex items-center gap-1.5";
+            renderPhase();
+        }
+
+        function skipPhase() {
+            if (currentPhaseIndex < PHASES.length - 1) {
+                currentPhaseIndex++;
+                masterSecondsRemaining = PHASES[currentPhaseIndex].duration;
+                renderPhase();
+            }
+        }
+
+        function jumpToPhase(index) {
+            currentPhaseIndex = index;
+            masterSecondsRemaining = PHASES[index].duration;
+            renderPhase();
+        }
+
+        function advanceGauntletRound() {
+            if (gauntletRound < 3) {
+                gauntletRound++;
+                stationSecondsRemaining = roundDurations[gauntletRound];
+                const badge = document.getElementById("circuit-round-badge");
+                const desc = document.getElementById("circuit-mode-desc");
+                if (gauntletRound === 2) {
+                    badge.innerText = "Round 2: Tempo";
+                    badge.className = "bg-amber-600 text-white font-bold text-xs px-3 py-1 rounded-xl uppercase shadow";
+                    desc.innerText = "1:30 per station | Push pace & vocal energy";
+                } else if (gauntletRound === 3) {
+                    badge.innerText = "Round 3: Perfection";
+                    badge.className = "bg-purple-600 text-white font-bold text-xs px-3 py-1 rounded-xl uppercase shadow animate-pulse";
+                    desc.innerText = "1:00 per station | Zero-defect standard (Mistakes reset station)";
+                }
+                updateTimersDisplay();
+            } else {
+                alert("All 3 Gauntlet Rounds completed! Proceeding to Championship Finisher.");
+                jumpToPhase(3);
+            }
+        }
+
+        function triggerSprintTransition() {
+            stationSecondsRemaining = 15;
+            updateTimersDisplay();
+            playBeep();
+            alert("🚨 15-Second Sprint Transition! Sprint clockwise to the next station immediately.");
+        }
+
+        function triggerStationReset() {
+            stationSecondsRemaining = roundDurations[gauntletRound];
+            playBeep();
+            alert("⚠️ Station Perfection Reset! The offending group must restart their 60-second clock from zero.");
+            updateTimersDisplay();
+        }
+
+        function applyPenalty(penaltyName, seconds) {
+            masterSecondsRemaining = Math.max(0, masterSecondsRemaining - seconds);
+            updateTimersDisplay();
+            playBeep();
+            alert(`Penalty Triggered: ${penaltyName}. -${seconds}s deducted from master clock!`);
+        }
+
+        function selectStation(num) {
+            activeStationNumber = num;
+            for (let i = 1; i <= 6; i++) {
+                const btn = document.getElementById(`station-btn-${i}`);
+                if (i === num) {
+                    btn.className = "station-btn bg-slate-900 border-2 border-orange-500 p-3 rounded-xl cursor-pointer transition shadow";
+                } else {
+                    btn.className = "station-btn bg-slate-900 border border-slate-800 p-3 rounded-xl cursor-pointer transition hover:border-slate-700";
+                }
+            }
+            renderStationWorkbench();
+        }
+
+        function renderStationWorkbench() {
+            const container = document.getElementById("station-workbench-view");
+            const st = activeStationNumber;
+
+            let html = `<div class="flex justify-between items-center mb-3">
+                <span class="text-xs font-black text-orange-400 uppercase tracking-wider">Station ${st} Interactive Workbench</span>
+                <span class="text-[10px] text-slate-400">Head-to-Head Partner Tracking</span>
+            </div>`;
+
+            if (st === 1) {
+                html += `
+                    <div class="space-y-3">
+                        <div class="text-xs font-bold text-white">Reactive Mirror & 10-Yard First-Step Shuttles</div>
+                        <p class="text-[11px] text-slate-400">Partners face each other in a low fielding crouch. Partner A shuffles laterally 5 yards, touches the line, and sprints 10 yards. Partner B mirrors and races them.</p>
+                        <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl">
+                            <div>
+                                <div class="text-xs text-slate-300 font-semibold">Completed Shuttles & Sprints</div>
+                                <div class="text-2xl font-black text-orange-400">${stationState[1].reps} Reps</div>
+                            </div>
+                            <div class="space-x-2">
+                                <button onclick="modifyStationVal(1, 'reps', 1)" class="bg-orange-600 hover:bg-orange-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">+1 Rep</button>
+                                <button onclick="modifyStationVal(1, 'reps', -1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-lg text-xs">-1</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (st === 2) {
+                html += `
+                    <div class="space-y-3">
+                        <div class="text-xs font-bold text-white">Rotational Med-Ball Shot-Put & Scoop (8–10 lbs)</div>
+                        <p class="text-[11px] text-slate-400">Explode from back hip into rotational throw against wall, field clean rebound in athletic stance, and fire from opposite side.</p>
+                        <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl">
+                            <div>
+                                <div class="text-xs text-slate-300 font-semibold">Continuous Throws & Scoops</div>
+                                <div class="text-2xl font-black text-orange-400">${stationState[2].throws} Throws</div>
+                            </div>
+                            <div class="space-x-2">
+                                <button onclick="modifyStationVal(2, 'throws', 2)" class="bg-orange-600 hover:bg-orange-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">+2 Throws</button>
+                                <button onclick="modifyStationVal(2, 'throws', -1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-lg text-xs">-1</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (st === 3) {
+                html += `
+                    <div class="space-y-3">
+                        <div class="text-xs font-bold text-white">60-Foot Steal Starts & Deceleration Box</div>
+                        <p class="text-[11px] text-slate-400">Execute sharp crossover steal start, sprint 60 ft, and come to complete under-control stop inside 10-ft cone box without stumbling.</p>
+                        <div class="grid grid-cols-2 gap-3 bg-slate-950 p-3 rounded-xl">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div class="text-xs text-emerald-400 font-semibold">Clean Stops</div>
+                                    <div class="text-xl font-black text-white">${stationState[3].success}</div>
+                                </div>
+                                <button onclick="modifyStationVal(3, 'success', 1)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">Success +1</button>
+                            </div>
+                            <div class="flex justify-between items-center border-l border-slate-800 pl-3">
+                                <div>
+                                    <div class="text-xs text-red-400 font-semibold">Overruns / Slips</div>
+                                    <div class="text-xl font-black text-white">${stationState[3].fails}</div>
+                                </div>
+                                <button onclick="modifyStationVal(3, 'fails', 1)" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">Fail +1</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (st === 4) {
+                html += `
+                    <div class="space-y-3">
+                        <div class="text-xs font-bold text-white">🔥 Rapid-Fire Barehand Short-Hops (Zero-Defect Standard)</div>
+                        <p class="text-[11px] text-slate-400">Partners kneel 10 ft apart with one baseball (no gloves). Rapidly roll/bounce short-hops. Any drop resets count to zero!</p>
+                        <div class="flex items-center justify-between bg-slate-950 p-4 rounded-xl border border-orange-500/30">
+                            <div>
+                                <div class="text-xs text-orange-400 font-bold uppercase tracking-wider">Consecutive Clean Catch Streak</div>
+                                <div class="text-3xl font-black text-white">${stationState[4].catchStreak} <span class="text-xs text-slate-400 font-normal">Streak</span></div>
+                            </div>
+                            <div class="space-x-2">
+                                <button onclick="modifyStationVal(4, 'catchStreak', 1)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3.5 py-2 rounded-xl text-sm shadow">Catch +1</button>
+                                <button onclick="resetCatchStreak()" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3.5 py-2 rounded-xl text-sm shadow">Drop! (Reset 0)</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (st === 5) {
+                html += `
+                    <div class="space-y-3">
+                        <div class="text-xs font-bold text-white">Lateral Hurdle Hops & 15-Yard Burst</div>
+                        <p class="text-[11px] text-slate-400">Perform rapid double-leg lateral hops over three 6-inch mini-hurdles, stick landing, and open hips into 15-yard sprint.</p>
+                        <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl">
+                            <div>
+                                <div class="text-xs text-slate-300 font-semibold">Completed Bursts</div>
+                                <div class="text-2xl font-black text-orange-400">${stationState[5].reps} Reps</div>
+                            </div>
+                            <div class="space-x-2">
+                                <button onclick="modifyStationVal(5, 'reps', 1)" class="bg-orange-600 hover:bg-orange-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">+1 Rep</button>
+                                <button onclick="modifyStationVal(5, 'reps', -1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-lg text-xs">-1</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (st === 6) {
+                html += `
+                    <div class="space-y-3">
+                        <div class="text-xs font-bold text-white">Heavy Farmer's Carry (40–50 lb DB/KB)</div>
+                        <p class="text-[11px] text-slate-400">Carry down and back along 20-yard lane with tall posture, packed shoulders, and zero torso swaying.</p>
+                        <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl">
+                            <div>
+                                <div class="text-xs text-slate-300 font-semibold">Completed 40-Yd Trips</div>
+                                <div class="text-2xl font-black text-orange-400">${stationState[6].trips} Trips</div>
+                            </div>
+                            <div class="space-x-2">
+                                <button onclick="modifyStationVal(6, 'trips', 1)" class="bg-orange-600 hover:bg-orange-500 text-white font-bold px-3 py-1.5 rounded-lg text-xs">+1 Trip</button>
+                                <button onclick="modifyStationVal(6, 'trips', -1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-lg text-xs">-1</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function modifyStationVal(st, key, delta) {
+            stationState[st][key] = Math.max(0, stationState[st][key] + delta);
+            renderStationWorkbench();
+        }
+
+        function resetCatchStreak() {
+            stationState[4].catchStreak = 0;
+            playBeep();
+            renderStationWorkbench();
+        }
+
+        function toggleAudio() {
+            soundEnabled = !soundEnabled;
+            document.getElementById("audio-toggle-btn").innerText = soundEnabled ? "🔊 Sound On" : "🔇 Muted";
+            document.getElementById("audio-toggle-btn-desktop").innerText = soundEnabled ? "🔊 Sound" : "🔇 Muted";
+        }
+
+        function playBeep() {
+            if (!soundEnabled) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = "sine";
+                osc.frequency.value = 880;
+                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.4);
+            } catch (e) {
+                console.log("Audio Context not supported or blocked.");
+            }
+        }
+
+        function renderSquadStandings() {
+            const container = document.getElementById("squad-standings-container");
+            container.innerHTML = "";
+            squads.forEach((squad, idx) => {
+                container.innerHTML += `
+                    <div class="bg-slate-950 border border-slate-800/80 p-3 rounded-xl flex justify-between items-center">
+                        <div class="flex items-center space-x-3">
+                            <span class="font-black text-slate-500 text-sm">#${idx + 1}</span>
+                            <div>
+                                <div class="text-xs font-bold text-white">${squad.name}</div>
+                                <div class="text-[10px] text-slate-400">Penalties: <span class="text-red-400 font-bold">${squad.penalties}</span></div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm font-black text-orange-400">${squad.points} Pts</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function submitGauntletMetric(event) {
+            event.preventDefault();
+            const feedback = document.getElementById("log-feedback");
+            feedback.style.color = "#38bdf8";
+            feedback.innerText = "Syncing with Google Sheet API...";
+
+            const payload = {
+                action: "logData",
+                squadId: document.getElementById("log-squad-select").value,
+                station: document.getElementById("log-station-select").value,
+                metricType: document.getElementById("log-metric-type").value,
+                value: document.getElementById("log-metric-value").value
+            };
+
+            try {
+                await fetch(WEB_APP_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                feedback.style.color = "#4ade80";
+                feedback.innerText = "Successfully logged & synced to Google Sheet!";
+                document.getElementById("log-metric-value").value = "";
+                setTimeout(() => { feedback.innerText = ""; }, 3500);
+            } catch (err) {
+                console.error(err);
+                feedback.style.color = "#f87171";
+                feedback.innerText = "API sync failed (CORS/Network error).";
+            }
+        }
+
+        async function handlePlayerSubmit(event) {
+            event.preventDefault();
+            const name = document.getElementById("add-player-name").value;
+            const squad = document.getElementById("add-player-squad").value;
+            const pos = document.getElementById("add-player-pos").value || "UT";
+
+            const payload = {
+                action: "addPlayer",
+                name: name,
+                gradClass: "2027",
+                squad: squad,
+                position: pos
+            };
+
+            try {
+                await fetch(WEB_APP_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                alert(`Player ${name} added to Google Sheet successfully!`);
+                document.getElementById("add-player-name").value = "";
+                document.getElementById("add-player-pos").value = "";
+                loadGoogleSheetRoster();
+            } catch (err) {
+                console.error(err);
+                alert("Error adding player to sheet.");
+            }
+        }
+
+        async function loadGoogleSheetRoster() {
+            const tbody = document.getElementById("roster-table-body");
+            tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-500">Fetching player roster...</td></tr>`;
+
+            try {
+                const res = await fetch(`${WEB_APP_URL}?action=getPlayers`);
+                const players = await res.json();
+
+                if (!players || players.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-500">No players found in sheet.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = "";
+                players.forEach(p => {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-950/50">
+                            <td class="p-2.5 font-medium text-white">${p.name}</td>
+                            <td class="p-2.5 text-slate-400">${p.gradClass}</td>
+                            <td class="p-2.5 text-orange-400 font-semibold">${p.squad}</td>
+                            <td class="p-2.5 text-slate-300">${p.position}</td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-red-400">Unable to load live sheet roster.</td></tr>`;
+            }
+        }
+
+        window.onload = initApp;
+    </script>
 </body>
 </html>
