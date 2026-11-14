@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Gauntlet - Baseball Challenge Dashboard</title>
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --dark: #202124;
+            --light: #f8f9fa;
+            --danger: #d93025;
+            --success: #1e8e3e;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1, h2 { color: var(--primary); }
+        .section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover { background-color: #1557b0; }
+        .btn-danger { background-color: var(--danger); }
+        .btn-danger:hover { background-color: #a51d13; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th { background-color: var(--primary); color: white; }
+        .status-msg {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>⚾ The Gauntlet: Baseball Challenge</h1>
+    <p>High School Program Practice Tracker & Synchronized System</p>
+
+    <!-- SECTION 1: ADD PLAYER -->
+    <div class="section">
+        <h2>Add Player to Roster</h2>
+        <form id="playerForm" onsubmit="handlePlayerSubmit(event)">
+            <div class="form-group">
+                <label for="name">Player Name:</label>
+                <input type="text" id="name" required placeholder="e.g. John Doe">
+            </div>
+            <div class="form-group">
+                <label for="gradClass">Grad Class:</label>
+                <select id="gradClass">
+                    <option value="2027">2027 (18U/17U)</option>
+                    <option value="2028">2028 (17U)</option>
+                    <option value="2029">2029 (16U)</option>
+                    <option value="2030">2030 (15U)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="squad">Squad Assignment (1–6):</label>
+                <select id="squad">
+                    <option value="Squad 1">Squad 1</option>
+                    <option value="Squad 2">Squad 2</option>
+                    <option value="Squad 3">Squad 3</option>
+                    <option value="Squad 4">Squad 4</option>
+                    <option value="Squad 5">Squad 5</option>
+                    <option value="Squad 6">Squad 6</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="position">Position:</label>
+                <input type="text" id="position" placeholder="e.g. SS / RHP">
+            </div>
+            <button type="submit">Save Player to Sheet</button>
+            <div id="playerStatus" class="status-msg"></div>
+        </form>
+    </div>
+
+    <!-- SECTION 2: LOG GAUNTLET METRIC / PENALTY -->
+    <div class="section">
+        <h2>Log Station Reps or Penalties</h2>
+        <form id="metricForm" onsubmit="handleMetricSubmit(event)">
+            <div class="form-group">
+                <label for="logSquad">Squad:</label>
+                <select id="logSquad">
+                    <option value="Squad 1">Squad 1</option>
+                    <option value="Squad 2">Squad 2</option>
+                    <option value="Squad 3">Squad 3</option>
+                    <option value="Squad 4">Squad 4</option>
+                    <option value="Squad 5">Squad 5</option>
+                    <option value="Squad 6">Squad 6</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="station">Station:</label>
+                <select id="station">
+                    <option value="Station 1: Reactive Mirror">Station 1: Reactive Mirror</option>
+                    <option value="Station 2: Med-Ball Shot-Put">Station 2: Med-Ball Shot-Put</option>
+                    <option value="Station 3: Steal Starts">Station 3: Steal Starts</option>
+                    <option value="Station 4: Barehand Short-Hops">Station 4: Barehand Short-Hops</option>
+                    <option value="Station 5: Hurdle Burst">Station 5: Hurdle Burst</option>
+                    <option value="Station 6: Farmer's Carry">Station 6: Farmer's Carry</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="metricType">Metric Type:</label>
+                <select id="metricType">
+                    <option value="Reps">Reps Completed</option>
+                    <option value="Catch Streak">Clean Catch Streak</option>
+                    <option value="Penalty (-5s)">Penalty (-5s / Error)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="value">Value / Count:</label>
+                <input type="number" id="value" required placeholder="e.g. 15">
+            </div>
+            <button type="submit">Log Metric</button>
+            <div id="metricStatus" class="status-msg"></div>
+        </form>
+    </div>
+
+    <!-- SECTION 3: ROSTER TABLE -->
+    <div class="section">
+        <h2>Live Roster Viewer</h2>
+        <button onclick="loadRoster()">Refresh Roster from Sheet</button>
+        <table id="rosterTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Grad Class</th>
+                    <th>Squad</th>
+                    <th>Position</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="5" style="text-align: center;">Click refresh to load players.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Your deployed Apps Script Web App URL
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwvEgyc6itMpuu3xE_hwV4_-3gNo5BAaCRgymGsuGsNbJaMdRt77el8kLD1jFykJhGQ/exec";
+
+    async function handlePlayerSubmit(event) {
+        event.preventDefault();
+        const statusDiv = document.getElementById("playerStatus");
+        statusDiv.style.color = "blue";
+        statusDiv.innerText = "Saving player...";
+
+        const playerData = {
+            action: "addPlayer",
+            name: document.getElementById("name").value,
+            gradClass: document.getElementById("gradClass").value,
+            squad: document.getElementById("squad").value,
+            position: document.getElementById("position").value
+        };
+
+        try {
+            await fetch(WEB_APP_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(playerData)
+            });
+            statusDiv.style.color = "green";
+            statusDiv.innerText = "Player successfully added!";
+            document.getElementById("playerForm").reset();
+            loadRoster();
+        } catch (error) {
+            statusDiv.style.color = "red";
+            statusDiv.innerText = "Error saving player.";
+            console.error(error);
+        }
+    }
+
+    async function handleMetricSubmit(event) {
+        event.preventDefault();
+        const statusDiv = document.getElementById("metricStatus");
+        statusDiv.style.color = "blue";
+        statusDiv.innerText = "Logging metric...";
+
+        const logData = {
+            action: "logData",
+            squadId: document.getElementById("logSquad").value,
+            station: document.getElementById("station").value,
+            metricType: document.getElementById("metricType").value,
+            value: document.getElementById("value").value
+        };
+
+        try {
+            await fetch(WEB_APP_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(logData)
+            });
+            statusDiv.style.color = "green";
+            statusDiv.innerText = "Metric logged successfully!";
+            document.getElementById("metricForm").reset();
+        } catch (error) {
+            statusDiv.style.color = "red";
+            statusDiv.innerText = "Error logging metric.";
+            console.error(error);
+        }
+    }
+
+    async function loadRoster() {
+        const tbody = document.querySelector("#rosterTable tbody");
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">Loading roster...</td></tr>`;
+
+        try {
+            const response = await fetch(`${WEB_APP_URL}?action=getPlayers`);
+            const players = await response.json();
+
+            if (players.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No players found in sheet.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = "";
+            players.forEach(p => {
+                const row = `<tr>
+                    <td>${p.id}</td>
+                    <td>${p.name}</td>
+                    <td>${p.gradClass}</td>
+                    <td>${p.squad}</td>
+                    <td>${p.position}</td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        } catch (error) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: red;">Failed to load roster.</td></tr>`;
+            console.error(error);
+        }
+    }
+
+    // Load roster on initial page load
+    window.onload = loadRoster;
+</script>
+
+</body>
+</html>
