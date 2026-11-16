@@ -623,9 +623,14 @@
         const curState = stationState[st];
         const targetRec = gauntletRound === 1 ? curState.targetRnd1 : (gauntletRound === 2 ? curState.targetRnd2 : curState.targetRnd3);
 
-        let html = `<div class="flex justify-between items-center mb-3">
-            <span class="text-xs font-black text-orange-400 uppercase tracking-wider">Station ${st} Interactive Workbench</span>
-            <span class="text-[10px] text-emerald-400 font-bold bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800">Target: ${targetRec}</span>
+        let html = `<div class="flex flex-wrap justify-between items-center mb-3 gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-black text-orange-400 uppercase tracking-wider">Station ${st} Interactive Workbench</span>
+                <span class="text-[10px] text-emerald-400 font-bold bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800">Target: ${targetRec}</span>
+            </div>
+            <button onclick="resetStationWorkbench(${st})" class="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 font-bold text-xs px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow">
+                🔄 Reset Workbench for Next Squad
+            </button>
         </div>`;
 
         if (st === 1) {
@@ -757,6 +762,20 @@
             renderSquadStandings();
         }
 
+        renderStationWorkbench();
+    }
+
+    
+    function resetStationWorkbench(st) {
+        if (!st) st = activeStationNumber;
+        if (st === 1) stationState[1].reps = 0;
+        else if (st === 2) stationState[2].throws = 0;
+        else if (st === 3) { stationState[3].success = 0; stationState[3].fails = 0; }
+        else if (st === 4) stationState[4].catchStreak = 0;
+        else if (st === 5) stationState[5].reps = 0;
+        else if (st === 6) stationState[6].trips = 0;
+        
+        playBeep();
         renderStationWorkbench();
     }
 
