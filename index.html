@@ -594,6 +594,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 action: "logData",
+            round: "Round " + gauntletRound,
                 squadId: squadId,
                 station: "Coach Penalty Panel",
                 metricType: `Penalty (-${seconds}s)`,
@@ -888,6 +889,7 @@
 
         const payload = {
             action: "logData",
+            round: "Round " + gauntletRound,
             squadId: squadId,
             station: document.getElementById("log-station-select").value,
             metricType: metricType,
