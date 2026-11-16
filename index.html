@@ -111,7 +111,7 @@
                     </div>
 
                     <p id="stage-description" class="text-slate-300 text-sm md:text-base leading-relaxed mb-6">
-                        Focus on opening hips, activating thoracic spine, and priming ankles for sharp deceleration. Light jogs, high knees, butt kicks, karaoke, lateral shuffles (40ft), World's Greatest Stretch, spiderman crawls, leg swings, and inchworms.
+                        Focus on opening hips, activating thoracic spine, and priming ankles for sharp deceleration. Light jogs, high knees, butt kicks, karaoke, lateral shuffles (40ft), World's Greatest Stretch, spiderman crawls, leg swings, and inchworms. Finish with 3 sets of 5 pogo hops and 2 build-up sprints.
                     </p>
                 </div>
 
@@ -173,9 +173,17 @@
                         <div class="text-xs font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
                             <span>🛡️ Coach Enforcement Panel</span>
                         </div>
-                        <div class="text-[11px] text-slate-400">Tap to instantly deduct master time or trigger resets</div>
+                        <div class="text-[11px] text-slate-400">Select target squad to apply time deductions or station resets</div>
                     </div>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <select id="coach-penalty-squad" class="bg-slate-900 border border-slate-800 text-xs font-bold text-orange-400 px-3 py-2 rounded-xl focus:outline-none">
+                            <option value="Squad 1">Squad 1 (Infield)</option>
+                            <option value="Squad 2">Squad 2 (Outfield)</option>
+                            <option value="Squad 3">Squad 3 (Pitchers)</option>
+                            <option value="Squad 4">Squad 4 (Catchers)</option>
+                            <option value="Squad 5">Squad 5 (Corner IF)</option>
+                            <option value="Squad 6">Squad 6 (Freshmen)</option>
+                        </select>
                         <button onclick="applyPenalty('Hands on Knees (-5s)', 5)" class="bg-red-950 hover:bg-red-900 text-red-300 border border-red-800/60 text-xs font-bold px-3 py-2 rounded-xl transition shadow flex items-center gap-1">
                             ⚠️ Hands on Knees (-5s)
                         </button>
@@ -201,7 +209,10 @@
                     <h2 class="text-sm font-black uppercase tracking-wider text-white flex items-center gap-2">
                         <span>🏆 Squad Accountability Standings</span>
                     </h2>
-                    <span class="text-xs text-orange-400 font-semibold">Shared Clock & Fate</span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="loadGoogleSheetSquads()" class="text-xs text-orange-400 hover:underline font-semibold">🔄 Sync Sheets</button>
+                        <span class="text-xs text-slate-400 font-semibold">Shared Fate</span>
+                    </div>
                 </div>
 
                 <div class="space-y-2.5" id="squad-standings-container">
@@ -391,12 +402,12 @@
     };
 
     let squads = [
-        { id: "Squad 1", name: "Squad 1 (Infield)", points: 18, penalties: 0 },
-        { id: "Squad 2", name: "Squad 2 (Outfield)", points: 15, penalties: 1 },
-        { id: "Squad 3", name: "Squad 3 (Pitchers)", points: 13, penalties: 2 },
-        { id: "Squad 4", name: "Squad 4 (Catchers)", points: 17, penalties: 0 },
-        { id: "Squad 5", name: "Squad 5 (Corner IF)", points: 14, penalties: 1 },
-        { id: "Squad 6", name: "Squad 6 (Freshmen)", points: 12, penalties: 2 }
+        { id: "Squad 1", name: "Squad 1 (Infield)", points: 0, penalties: 0, reps: 0 },
+        { id: "Squad 2", name: "Squad 2 (Outfield)", points: 0, penalties: 0, reps: 0 },
+        { id: "Squad 3", name: "Squad 3 (Pitchers)", points: 0, penalties: 0, reps: 0 },
+        { id: "Squad 4", name: "Squad 4 (Catchers)", points: 0, penalties: 0, reps: 0 },
+        { id: "Squad 5", name: "Squad 5 (Corner IF)", points: 0, penalties: 0, reps: 0 },
+        { id: "Squad 6", name: "Squad 6 (Freshmen)", points: 0, penalties: 0, reps: 0 }
     ];
 
     function initApp() {
@@ -404,6 +415,7 @@
         renderSquadStandings();
         renderStationWorkbench();
         loadGoogleSheetRoster();
+        loadGoogleSheetSquads();
     }
 
     function renderPhase() {
@@ -562,10 +574,34 @@
     }
 
     function applyPenalty(penaltyName, seconds) {
+        const squadId = document.getElementById("coach-penalty-squad").value;
         masterSecondsRemaining = Math.max(0, masterSecondsRemaining - seconds);
         updateTimersDisplay();
         playBeep();
-        alert(`Penalty Triggered: ${penaltyName}. -${seconds}s deducted from master clock!`);
+
+        // Attribute penalty to selected squad
+        const targetSq = squads.find(s => s.id === squadId || s.name.indexOf(squadId) !== -1);
+        if (targetSq) {
+            targetSq.penalties += 1;
+            targetSq.points -= 2;
+            renderSquadStandings();
+        }
+
+        // Post penalty to Google Sheets
+        fetch(WEB_APP_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                action: "logData",
+                squadId: squadId,
+                station: "Coach Penalty Panel",
+                metricType: `Penalty (-${seconds}s)`,
+                value: 1
+            })
+        }).catch(err => console.log(err));
+
+        alert(`Penalty Triggered for ${squadId}: ${penaltyName}. -${seconds}s deducted from master clock!`);
     }
 
     function selectStation(num) {
@@ -707,12 +743,34 @@
 
     function modifyStationVal(st, key, delta) {
         stationState[st][key] = Math.max(0, stationState[st][key] + delta);
+        
+        // Dynamic score credit to squad assigned to this station
+        const activeSquadIdx = (st - 1 + (gauntletRound - 1)) % squads.length;
+        if (squads[activeSquadIdx]) {
+            if (delta > 0) {
+                squads[activeSquadIdx].points += delta;
+                squads[activeSquadIdx].reps += delta;
+            } else if (key === 'fails') {
+                squads[activeSquadIdx].penalties += 1;
+                squads[activeSquadIdx].points -= 2;
+            }
+            renderSquadStandings();
+        }
+
         renderStationWorkbench();
     }
 
     function resetCatchStreak() {
         stationState[4].catchStreak = 0;
         playBeep();
+        
+        const activeSquadIdx = (4 - 1 + (gauntletRound - 1)) % squads.length;
+        if (squads[activeSquadIdx]) {
+            squads[activeSquadIdx].penalties += 1;
+            squads[activeSquadIdx].points -= 2;
+            renderSquadStandings();
+        }
+        
         renderStationWorkbench();
     }
 
@@ -744,22 +802,59 @@
     function renderSquadStandings() {
         const container = document.getElementById("squad-standings-container");
         container.innerHTML = "";
-        squads.forEach((squad, idx) => {
+
+        // Sort squads by points (highest first), tie-breaker fewest penalties
+        const sortedSquads = [...squads].sort((a, b) => {
+            if (b.points !== a.points) return b.points - a.points;
+            return a.penalties - b.penalties;
+        });
+
+        const rankBadges = ["🥇 1st (Exempt from Cleanup)", "🥈 2nd Place", "🥉 3rd Place", "4th Place", "5th Place", "💩 6th (Rake & Clean-Up Duty)"];
+
+        sortedSquads.forEach((squad, idx) => {
+            const badgeText = rankBadges[idx] || `#${idx + 1}`;
+            const badgeColor = idx === 0 ? "text-emerald-400 font-black" : (idx === 5 ? "text-red-400 font-black" : "text-slate-400");
+
             container.innerHTML += `
-                <div class="bg-slate-950 border border-slate-800/80 p-3 rounded-xl flex justify-between items-center">
+                <div class="bg-slate-950 border border-slate-800/80 p-3.5 rounded-xl flex justify-between items-center transition hover:border-slate-700">
                     <div class="flex items-center space-x-3">
                         <span class="font-black text-slate-500 text-sm">#${idx + 1}</span>
                         <div>
-                            <div class="text-xs font-bold text-white">${squad.name}</div>
-                            <div class="text-[10px] text-slate-400">Penalties: <span class="text-red-400 font-bold">${squad.penalties}</span></div>
+                            <div class="text-xs font-bold text-white flex items-center gap-2">
+                                <span>${squad.name || squad.id}</span>
+                                <span class="text-[10px] ${badgeColor}">${badgeText}</span>
+                            </div>
+                            <div class="text-[10px] text-slate-400">Penalties: <span class="text-red-400 font-bold">${squad.penalties || 0}</span> | Reps: <span class="text-emerald-400 font-bold">${squad.reps || 0}</span></div>
                         </div>
                     </div>
                     <div class="text-right">
-                        <span class="text-sm font-black text-orange-400">${squad.points} Pts</span>
+                        <span class="text-base font-black text-orange-400">${squad.points || 0} Pts</span>
                     </div>
                 </div>
             `;
         });
+    }
+
+    async function loadGoogleSheetSquads() {
+        const callbackName = "gauntletSquadsCB_" + Math.floor(Math.random() * 100000);
+
+        window[callbackName] = function(data) {
+            if (Array.isArray(data) && data.length > 0) {
+                squads = data;
+                renderSquadStandings();
+            }
+            delete window[callbackName];
+            if (scriptTag && scriptTag.parentNode) {
+                scriptTag.parentNode.removeChild(scriptTag);
+            }
+        };
+
+        const scriptTag = document.createElement("script");
+        scriptTag.src = `${WEB_APP_URL}?action=getSquads&callback=${callbackName}`;
+        scriptTag.onerror = function() {
+            delete window[callbackName];
+        };
+        document.body.appendChild(scriptTag);
     }
 
     async function submitGauntletMetric(event) {
@@ -768,13 +863,30 @@
         feedback.style.color = "#38bdf8";
         feedback.innerText = "Syncing with Google Sheet API...";
 
+        const squadId = document.getElementById("log-squad-select").value;
+        const metricType = document.getElementById("log-metric-type").value;
+        const val = Number(document.getElementById("log-metric-value").value) || 0;
+
         const payload = {
             action: "logData",
-            squadId: document.getElementById("log-squad-select").value,
+            squadId: squadId,
             station: document.getElementById("log-station-select").value,
-            metricType: document.getElementById("log-metric-type").value,
-            value: document.getElementById("log-metric-value").value
+            metricType: metricType,
+            value: val
         };
+
+        // Update locally
+        const targetSq = squads.find(s => s.id === squadId || s.name.indexOf(squadId) !== -1);
+        if (targetSq) {
+            if (metricType === "Penalty (-5s)") {
+                targetSq.penalties += 1;
+                targetSq.points -= 2;
+            } else {
+                targetSq.points += val;
+                targetSq.reps += val;
+            }
+            renderSquadStandings();
+        }
 
         try {
             await fetch(WEB_APP_URL, {
@@ -787,8 +899,9 @@
             feedback.innerText = "Successfully logged & synced to Google Sheet!";
             document.getElementById("log-metric-value").value = "";
             setTimeout(() => { feedback.innerText = ""; }, 3500);
+            setTimeout(loadGoogleSheetSquads, 1200);
         } catch (err) {
-            console.warn("API network restricted in preview sandbox. Metric recorded locally.");
+            console.warn(err);
             feedback.style.color = "#fbbf24";
             feedback.innerText = "Logged locally (Sandbox CORS restriction bypassed).";
             document.getElementById("log-metric-value").value = "";
@@ -814,45 +927,40 @@
             await fetch(WEB_APP_URL, {
                 method: "POST",
                 mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "text/plain" },
                 body: JSON.stringify(payload)
             });
-            alert(`Player ${name} sent to Google Sheet successfully!`);
+            alert(`Player "${name}" submitted to Google Sheet!`);
             document.getElementById("add-player-name").value = "";
             document.getElementById("add-player-pos").value = "";
-            setTimeout(loadGoogleSheetRoster, 1500);
+            setTimeout(loadGoogleSheetRoster, 1200);
         } catch (err) {
             console.error(err);
             alert("Error sending player to Google Sheet.");
         }
     }
 
-    async function loadGoogleSheetRoster() {
+    function loadGoogleSheetRoster() {
         const tbody = document.getElementById("roster-table-body");
-        tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-500">Fetching live roster directly from Google Sheet...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-500">Fetching live roster from Google Sheet...</td></tr>`;
 
-        try {
-            // Attempt standard CORS fetch first
-            const response = await fetch(`${WEB_APP_URL}?action=getPlayers`, {
-                method: 'GET',
-                headers: { 'Accept': 'application/json' }
-            });
-            const players = await response.json();
+        const callbackName = "gauntletRosterCB_" + Math.floor(Math.random() * 100000);
+
+        window[callbackName] = function(players) {
             renderRosterTable(players);
-        } catch (err) {
-            console.warn("CORS fetch blocked in sandbox, switching to JSONP callback...", err);
-            // Fallback to JSONP script injection to bypass sandbox CORS restrictions
-            window.__jsonpCallback = function(players) {
-                renderRosterTable(players);
-                delete window.__jsonpCallback;
-            };
-            const script = document.createElement('script');
-            script.src = `${WEB_APP_URL}?action=getPlayers&callback=__jsonpCallback`;
-            script.onerror = function() {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-red-400">Failed to load live sheet roster. Ensure Google Apps Script Web App is published with access set to "Anyone".</td></tr>`;
-            };
-            document.body.appendChild(script);
-        }
+            delete window[callbackName];
+            if (scriptTag && scriptTag.parentNode) {
+                scriptTag.parentNode.removeChild(scriptTag);
+            }
+        };
+
+        const scriptTag = document.createElement("script");
+        scriptTag.src = `${WEB_APP_URL}?action=getPlayers&callback=${callbackName}`;
+        scriptTag.onerror = function() {
+            tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-red-400 font-bold">Failed to load sheet roster. Verify Web App is deployed to "Anyone".</td></tr>`;
+            delete window[callbackName];
+        };
+        document.body.appendChild(scriptTag);
     }
 
     function renderRosterTable(players) {
@@ -866,10 +974,10 @@
         players.forEach(p => {
             tbody.innerHTML += `
                 <tr class="hover:bg-slate-950/50">
-                    <td class="p-2.5 font-medium text-white">${p.name || p.Name || ''}</td>
-                    <td class="p-2.5 text-slate-400">${p.gradClass || p.Grad || ''}</td>
-                    <td class="p-2.5 text-orange-400 font-semibold">${p.squad || p.Squad || ''}</td>
-                    <td class="p-2.5 text-slate-300">${p.position || p.Position || ''}</td>
+                    <td class="p-2.5 font-medium text-white">${p.name || ''}</td>
+                    <td class="p-2.5 text-slate-400">${p.gradClass || ''}</td>
+                    <td class="p-2.5 text-orange-400 font-semibold">${p.squad || ''}</td>
+                    <td class="p-2.5 text-slate-300">${p.position || ''}</td>
                 </tr>
             `;
         });
